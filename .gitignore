@@ -35,3 +35,6 @@ Thumbs.db
 # Local agent notes
 AGENTS.md
 docs/
+
+#jenv
+/.java-version
