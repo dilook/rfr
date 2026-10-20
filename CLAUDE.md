@@ -36,7 +36,8 @@ bash ports.sh                          # убить процессы на 9001/8
 
 # e2e
 ./gradlew :rfr-e2e:test
-./gradlew :rfr-e2e:test --tests 'io.student.rangiffler.test.fake.SimpleTest'
+./gradlew :rfr-e2e:test --tests 'io.student.rangiffler.test.web.RegistrationTest' --rerun-tasks
+./gradlew :rfr-e2e:test -Prfr.headless=false   # с видимым браузером
 ./gradlew :rfr-e2e:allureReport        # или allureServe
 ```
 
@@ -58,7 +59,11 @@ Unit-тестов в `rfr-api`/`rfr-auth` нет. HQL в `@Query` валидир
   Отозванный токен API продолжает принимать до `exp` (проверка локальная по подписи).
 - **rfr-gql-client** — SPA; каждая GraphQL-операция инкапсулирована в хук в `src/hooks` с именованной операцией
   (`GetFeed`, `FriendshipAction`, …) — удобно перехватывать в тестах по `operationName`.
-- **rfr-e2e** — пока только заготовка (`SimpleTest`), AspectJ-агент для Allure подключается в `test`.
+- **rfr-e2e** — UI-тесты на Playwright Java: классы помечаются `@UsePlaywright(PlaywrightOptions.class)`, `Page`
+  приходит параметром теста. Страницы и компоненты — в `ui/page` и `ui/component`; создавать и менять их только по
+  навыку `rfr-page-objects` (`.claude/skills/rfr-page-objects/SKILL.md`). Настройки — `config/Config`:
+  system property `rfr.<key>` → env `RFR_<KEY>` → default; из Gradle — `-Prfr.<key>=…`.
+  AspectJ-агент для Allure подключается в `test`.
 
 ### Данные
 
