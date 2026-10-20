@@ -64,6 +64,11 @@ Unit-тестов в `rfr-api`/`rfr-auth` нет. HQL в `@Query` валидир
   навыку `rfr-page-objects` (`.claude/skills/rfr-page-objects/SKILL.md`). Настройки — `config/Config`:
   system property `rfr.<key>` → env `RFR_<KEY>` → default; из Gradle — `-Prfr.<key>=…`.
   AspectJ-агент для Allure подключается в `test`.
+  Готовый пользователь — параметр `@User TestUser user` (аннотация сама подключает `UserExtension`): до теста создаётся
+  в `rangiffler-auth` через spring-jdbc (`AuthUserDbClient`, `{bcrypt}`-пароль, права `read`/`write`), после теста —
+  даже упавшего — удаляется из `rangiffler-api` по username (`ApiUserDbClient`, вместе с фото, лайками, статистикой и
+  дружбой) и из `rangiffler-auth`. Пользователи, зарегистрированные через UI (`RegistrationTest`), расширением не
+  удаляются и копятся в обеих схемах.
 
 ### Данные
 
