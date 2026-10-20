@@ -18,6 +18,10 @@ public final class Config {
     return get("front.url", "http://localhost:3001");
   }
 
+  public static String authUrl() {
+    return get("auth.url", "http://localhost:9001");
+  }
+
   public static boolean headless() {
     return Boolean.parseBoolean(get("headless", "true"));
   }

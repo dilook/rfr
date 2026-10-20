@@ -3,7 +3,7 @@ package io.student.rangiffler.test.web;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.junit.UsePlaywright;
 import io.student.rangiffler.config.PlaywrightOptions;
-import io.student.rangiffler.page.WelcomePage;
+import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,14 +21,16 @@ public class RegistrationTest {
 
     new WelcomePage(page)
         .open()
-        .goToRegister()
-        .fillForm(username, password, password)
-        .submit()
-        .checkSuccessfulRegistration()
-        .goToSignIn()
-        .goToLogin()
-        .login(username, password)
+        .clickRegister()
+        .fillRegistrationForm(username, password, password)
+        .clickSignUp()
+        .checkThatRegistrationSucceeded()
+        .clickSignIn()
+        .clickLogin()
+        .fillLoginForm(username, password)
+        .clickSignIn()
+        .checkThatUserIsLoggedIn()
         .goToProfile()
-        .checkUsername(username);
+        .checkThatUsername(username);
   }
 }
