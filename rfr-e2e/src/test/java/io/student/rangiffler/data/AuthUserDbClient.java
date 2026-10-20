@@ -1,5 +1,6 @@
 package io.student.rangiffler.data;
 
+import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
 import io.student.rangiffler.model.TestUser;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,6 +27,7 @@ public class AuthUserDbClient {
     this.transactionTemplate = new TransactionTemplate(new JdbcTransactionManager(dataSource));
   }
 
+  @Step("Создать пользователя в БД rangiffler-auth: {username} / {password}")
   public TestUser createUser(String username, String password) {
     UUID id = UUID.randomUUID();
     transactionTemplate.executeWithoutResult(status -> {
@@ -44,6 +46,7 @@ public class AuthUserDbClient {
     return new TestUser(id, username, password);
   }
 
+  @Step("Удалить пользователя из БД rangiffler-auth: {user.username}")
   public void deleteUser(TestUser user) {
     transactionTemplate.executeWithoutResult(status -> {
       jdbcTemplate.update("delete from `authority` where user_id = UUID_TO_BIN(?, true)", user.id().toString());

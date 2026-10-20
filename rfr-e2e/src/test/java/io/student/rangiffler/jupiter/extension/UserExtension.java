@@ -1,6 +1,5 @@
 package io.student.rangiffler.jupiter.extension;
 
-import io.qameta.allure.Allure;
 import io.student.rangiffler.data.ApiUserDbClient;
 import io.student.rangiffler.data.AuthUserDbClient;
 import io.student.rangiffler.jupiter.annotation.User;
@@ -31,12 +30,7 @@ public class UserExtension implements BeforeEachCallback, ParameterResolver, Aft
     context.getStore(NAMESPACE).put(context.getUniqueId(), users);
     for (int i = 0; i < parameters.length; i++) {
       if (isUserParameter(parameters[i])) {
-        String username = randomUsername();
-        String password = randomPassword();
-        users.put(i, Allure.step(
-            "Создать пользователя в БД rangiffler-auth: " + username + " / " + password,
-            () -> AUTH_USER_DB_CLIENT.createUser(username, password)
-        ));
+        users.put(i, AUTH_USER_DB_CLIENT.createUser(randomUsername(), randomPassword()));
       }
     }
   }
@@ -58,14 +52,8 @@ public class UserExtension implements BeforeEachCallback, ParameterResolver, Aft
       return;
     }
     users.values().forEach(user -> {
-      Allure.step(
-          "Удалить пользователя из БД rangiffler-api: " + user.username(),
-          () -> API_USER_DB_CLIENT.deleteUserByUsername(user.username())
-      );
-      Allure.step(
-          "Удалить пользователя из БД rangiffler-auth: " + user.username(),
-          () -> AUTH_USER_DB_CLIENT.deleteUser(user)
-      );
+      API_USER_DB_CLIENT.deleteUserByUsername(user.username());
+      AUTH_USER_DB_CLIENT.deleteUser(user);
     });
   }
 

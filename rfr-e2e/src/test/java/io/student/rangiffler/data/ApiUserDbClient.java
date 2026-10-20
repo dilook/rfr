@@ -1,5 +1,6 @@
 package io.student.rangiffler.data;
 
+import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -19,6 +20,7 @@ public class ApiUserDbClient {
     this.transactionTemplate = new TransactionTemplate(new JdbcTransactionManager(dataSource));
   }
 
+  @Step("Удалить пользователя из БД rangiffler-api: {username}")
   public void deleteUserByUsername(String username) {
     transactionTemplate.executeWithoutResult(status -> {
       for (byte[] userId : jdbcTemplate.queryForList("select id from `user` where username = ?", byte[].class, username)) {
