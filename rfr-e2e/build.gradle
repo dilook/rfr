@@ -10,6 +10,9 @@ def allureReportVersion = '3.17.0'
 def aspectJVersion = '1.9.25.1'
 def junitVersion = '6.1.3'
 def playwrightVersion = '1.63.0'
+def springVersion = '7.0.9'
+def springSecurityVersion = '7.1.1'
+def mysqlDriverVersion = '9.7.0'
 
 configurations {
     agent {
@@ -27,6 +30,9 @@ dependencies {
     testImplementation "io.qameta.allure:allure-jupiter"
     testImplementation "io.qameta.allure:allure-playwright"
     testImplementation "com.microsoft.playwright:playwright:$playwrightVersion"
+    testImplementation "org.springframework:spring-jdbc:$springVersion"
+    testImplementation "org.springframework.security:spring-security-crypto:$springSecurityVersion"
+    testRuntimeOnly "com.mysql:mysql-connector-j:$mysqlDriverVersion"
 
     testImplementation "org.junit.jupiter:junit-jupiter"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"

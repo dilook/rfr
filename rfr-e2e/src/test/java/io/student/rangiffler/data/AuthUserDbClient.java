@@ -1,0 +1,53 @@
+package io.student.rangiffler.data;
+
+import io.student.rangiffler.config.Config;
+import io.student.rangiffler.model.TestUser;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.support.JdbcTransactionManager;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.UUID;
+
+public class AuthUserDbClient {
+
+  private static final PasswordEncoder PASSWORD_ENCODER = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
+  private final JdbcTemplate jdbcTemplate;
+  private final TransactionTemplate transactionTemplate;
+
+  public AuthUserDbClient() {
+    DriverManagerDataSource dataSource = new DriverManagerDataSource(
+        Config.authJdbcUrl(), Config.dbUsername(), Config.dbPassword()
+    );
+    this.jdbcTemplate = new JdbcTemplate(dataSource);
+    this.transactionTemplate = new TransactionTemplate(new JdbcTransactionManager(dataSource));
+  }
+
+  public TestUser createUser(String username, String password) {
+    UUID id = UUID.randomUUID();
+    transactionTemplate.executeWithoutResult(status -> {
+      jdbcTemplate.update(
+          "insert into `user` (id, username, password, enabled, account_non_expired, account_non_locked, credentials_non_expired) "
+              + "values (UUID_TO_BIN(?, true), ?, ?, true, true, true, true)",
+          id.toString(), username, PASSWORD_ENCODER.encode(password)
+      );
+      for (String authority : new String[]{"read", "write"}) {
+        jdbcTemplate.update(
+            "insert into `authority` (user_id, authority) values (UUID_TO_BIN(?, true), ?)",
+            id.toString(), authority
+        );
+      }
+    });
+    return new TestUser(id, username, password);
+  }
+
+  public void deleteUser(TestUser user) {
+    transactionTemplate.executeWithoutResult(status -> {
+      jdbcTemplate.update("delete from `authority` where user_id = UUID_TO_BIN(?, true)", user.id().toString());
+      jdbcTemplate.update("delete from `user` where id = UUID_TO_BIN(?, true)", user.id().toString());
+    });
+  }
+}

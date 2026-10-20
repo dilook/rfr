@@ -22,6 +22,22 @@ public final class Config {
     return get("auth.url", "http://localhost:9001");
   }
 
+  public static String authJdbcUrl() {
+    return get("auth.jdbc.url", "jdbc:mysql://localhost:3306/rangiffler-auth?serverTimezone=UTC");
+  }
+
+  public static String apiJdbcUrl() {
+    return get("api.jdbc.url", "jdbc:mysql://localhost:3306/rangiffler-api?serverTimezone=UTC");
+  }
+
+  public static String dbUsername() {
+    return get("db.username", "root");
+  }
+
+  public static String dbPassword() {
+    return get("db.password", "secret");
+  }
+
   public static boolean headless() {
     return Boolean.parseBoolean(get("headless", "true"));
   }
