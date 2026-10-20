@@ -38,3 +38,6 @@ docs/
 
 #jenv
 /.java-version
+
+# Playwright MCP
+/.playwright-mcp/

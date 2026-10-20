@@ -43,5 +43,11 @@ allure {
 
 test {
     useJUnitPlatform()
+    // ./gradlew :rfr-e2e:test -Pheadless=false -Pfront.url=http://localhost:3001
+    ['headless', 'front.url'].each { name ->
+        if (project.hasProperty(name)) {
+            systemProperty name, project.property(name)
+        }
+    }
     jvmArgumentProviders.add({ ["-javaagent:${configurations.agent.singleFile}"] } as CommandLineArgumentProvider)
 }
