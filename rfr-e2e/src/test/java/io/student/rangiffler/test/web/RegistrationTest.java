@@ -3,34 +3,38 @@ package io.student.rangiffler.test.web;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.junit.UsePlaywright;
 import io.student.rangiffler.config.PlaywrightOptions;
+import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.data.UserFixture;
 import io.student.rangiffler.ui.page.WelcomePage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static io.student.rangiffler.utils.RandomDataUtils.randomPassword;
-import static io.student.rangiffler.utils.RandomDataUtils.randomUsername;
 
 @UsePlaywright(PlaywrightOptions.class)
 public class RegistrationTest {
 
+  private final TestUser user = TestUser.unique();
+
+  @AfterEach
+  void deleteRegisteredUser() {
+      new UserFixture(user).close();
+  }
+
   @Test
   @DisplayName("Новый пользователь может зарегистрироваться и войти в приложение")
   void newUserShouldRegisterAndLogin(Page page) {
-    String username = randomUsername();
-    String password = randomPassword();
-
     new WelcomePage(page)
         .open()
         .clickRegister()
-        .fillRegistrationForm(username, password, password)
+        .fillRegistrationForm(user.username(), user.password(), user.password())
         .clickSignUp()
         .checkThatRegistrationSucceeded()
         .clickSignIn()
         .clickLogin()
-        .fillLoginForm(username, password)
+        .fillLoginForm(user.username(), user.password())
         .clickSignIn()
         .checkThatUserIsLoggedIn()
         .goToProfile()
-        .checkThatUsername(username);
+        .checkThatUsername(user.username());
   }
 }

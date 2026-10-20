@@ -1,8 +1,8 @@
-package io.student.rangiffler.data;
+package io.student.rangiffler.data.clients;
 
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
-import io.student.rangiffler.model.TestUser;
+import io.student.rangiffler.data.TestUser;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.JdbcTransactionManager;
@@ -43,14 +43,16 @@ public class AuthUserDbClient {
         );
       }
     });
-    return new TestUser(id, username, password);
+    return new TestUser(username, password);
   }
 
-  @Step("Удалить пользователя из БД rangiffler-auth: {user.username}")
-  public void deleteUser(TestUser user) {
+  @Step("Удалить пользователя из БД rangiffler-auth: {username}")
+  public void deleteUserByUsername(String username) {
     transactionTemplate.executeWithoutResult(status -> {
-      jdbcTemplate.update("delete from `authority` where user_id = UUID_TO_BIN(?, true)", user.id().toString());
-      jdbcTemplate.update("delete from `user` where id = UUID_TO_BIN(?, true)", user.id().toString());
+      jdbcTemplate.update(
+          "delete from `authority` where user_id in (select id from `user` where username = ?)", username
+      );
+      jdbcTemplate.update("delete from `user` where username = ?", username);
     });
   }
 }

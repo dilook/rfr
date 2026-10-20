@@ -1,4 +1,4 @@
-package io.student.rangiffler.data;
+package io.student.rangiffler.data.clients;
 
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;

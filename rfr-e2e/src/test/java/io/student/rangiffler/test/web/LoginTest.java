@@ -4,7 +4,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.junit.UsePlaywright;
 import io.student.rangiffler.config.PlaywrightOptions;
 import io.student.rangiffler.jupiter.annotation.User;
-import io.student.rangiffler.model.TestUser;
+import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
