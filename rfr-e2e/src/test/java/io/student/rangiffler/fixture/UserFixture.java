@@ -15,20 +15,32 @@ public final class UserFixture implements AutoCloseable {
   private static final AuthUserDbClient AUTH_USER_DB_CLIENT = new AuthUserDbClient();
   private static final ApiUserDbClient API_USER_DB_CLIENT = new ApiUserDbClient();
 
-  private final List<TestUser> createdUsers = new ArrayList<>();
+  private final List<Runnable> cleanups = new ArrayList<>();
 
   public TestUser createUser() {
     TestUser user = AUTH_USER_DB_CLIENT.createUser(randomUsername(), randomPassword());
-    createdUsers.add(user);
+    cleanups.add(() -> API_USER_DB_CLIENT.deleteUserByUsername(user.username()));
+    cleanups.add(() -> AUTH_USER_DB_CLIENT.deleteUser(user));
     return user;
   }
 
   @Override
   public void close() {
-    for (TestUser user : createdUsers) {
-      API_USER_DB_CLIENT.deleteUserByUsername(user.username());
-      AUTH_USER_DB_CLIENT.deleteUser(user);
+    RuntimeException failure = null;
+    for (Runnable cleanup : cleanups) {
+      try {
+        cleanup.run();
+      } catch (RuntimeException e) {
+        if (failure == null) {
+          failure = e;
+        } else {
+          failure.addSuppressed(e);
+        }
+      }
     }
-    createdUsers.clear();
+    cleanups.clear();
+    if (failure != null) {
+      throw failure;
+    }
   }
 }
