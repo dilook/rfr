@@ -22,6 +22,10 @@ public final class Config {
     return get("auth.url", "http://localhost:9001");
   }
 
+  public static String apiUrl() {
+    return get("api.url", "http://localhost:8081");
+  }
+
   public static String authJdbcUrl() {
     return get("auth.jdbc.url", "jdbc:mysql://localhost:3306/rangiffler-auth?serverTimezone=UTC");
   }
