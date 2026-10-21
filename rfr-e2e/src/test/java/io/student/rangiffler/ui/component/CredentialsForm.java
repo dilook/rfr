@@ -36,15 +36,17 @@ public final class CredentialsForm {
     return this;
   }
 
-  @Step("Проверить, что пароль показан открытым текстом")
-  public CredentialsForm checkThatPasswordIsVisible() {
+  @Step("Проверить, что пароль показан открытым текстом: {password}")
+  public CredentialsForm checkThatPasswordIsVisible(String password) {
     assertThat(passwordInput).hasAttribute("type", "text");
+    assertThat(passwordInput).hasValue(password);
     return this;
   }
 
-  @Step("Проверить, что пароль скрыт")
-  public CredentialsForm checkThatPasswordIsMasked() {
+  @Step("Проверить, что пароль скрыт и сохранён: {password}")
+  public CredentialsForm checkThatPasswordIsMasked(String password) {
     assertThat(passwordInput).hasAttribute("type", "password");
+    assertThat(passwordInput).hasValue(password);
     return this;
   }
 }

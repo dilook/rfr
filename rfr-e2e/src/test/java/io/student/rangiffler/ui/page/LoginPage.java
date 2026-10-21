@@ -79,20 +79,20 @@ public final class LoginPage {
     return this;
   }
 
-  @Step("Проверить, что пароль показан открытым текстом")
-  public LoginPage checkThatPasswordIsVisible() {
-    credentialsForm.checkThatPasswordIsVisible();
+  @Step("Проверить на форме входа, что пароль показан: {password}")
+  public LoginPage checkThatPasswordIsVisible(String password) {
+    credentialsForm.checkThatPasswordIsVisible(password);
     return this;
   }
 
-  @Step("Проверить, что пароль скрыт")
-  public LoginPage checkThatPasswordIsMasked() {
-    credentialsForm.checkThatPasswordIsMasked();
+  @Step("Проверить на форме входа, что пароль скрыт: {password}")
+  public LoginPage checkThatPasswordIsMasked(String password) {
+    credentialsForm.checkThatPasswordIsMasked(password);
     return this;
   }
 
-  @Step("Проверить, что открыта страница входа")
-  public LoginPage checkThatOnLoginPage() {
+  @Step("Проверить переход на страницу входа rfr-auth")
+  public LoginPage checkThatRedirectedToLogin() {
     assertThat(page).hasURL(URL);
     return this;
   }

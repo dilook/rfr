@@ -48,8 +48,8 @@ public final class RegisterPage {
     return this;
   }
 
-  @Step("Проверить, что открыта страница регистрации")
-  public RegisterPage checkThatOnRegisterPage() {
+  @Step("Проверить переход на страницу регистрации rfr-auth")
+  public RegisterPage checkThatRedirectedToRegistration() {
     assertThat(page).hasURL(URL);
     return this;
   }

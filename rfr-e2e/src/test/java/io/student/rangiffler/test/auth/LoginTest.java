@@ -47,7 +47,7 @@ public class LoginTest {
     login(user, page)
         .logout()
         .clickLogin()
-        .checkThatOnLoginPage();
+        .checkThatRedirectedToLogin();
   }
 
   @Test
@@ -77,9 +77,9 @@ public class LoginTest {
         .clickLogin()
         .fillLoginForm(user.username(), user.password())
         .clickShowPassword()
-        .checkThatPasswordIsVisible()
+        .checkThatPasswordIsVisible(user.password())
         .clickShowPassword()
-        .checkThatPasswordIsMasked();
+        .checkThatPasswordIsMasked(user.password());
   }
 
   @Test
@@ -89,7 +89,7 @@ public class LoginTest {
         .open()
         .clickLogin()
         .clickSignUp()
-        .checkThatOnRegisterPage();
+        .checkThatRedirectedToRegistration();
   }
 
   private static MyTravelsPage login(TestUser user, Page page) {
