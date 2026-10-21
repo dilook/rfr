@@ -6,6 +6,8 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+
 public final class WelcomePage {
 
   public static final String URL = Config.frontUrl() + "/";
@@ -23,6 +25,12 @@ public final class WelcomePage {
   @Step("Открыть стартовую страницу")
   public WelcomePage open() {
     page.navigate(URL);
+    return this;
+  }
+
+  @Step("Проверить, что пользователь не авторизован: доступен Login")
+  public WelcomePage checkThatUserIsLoggedOut() {
+    assertThat(loginButton).isVisible();
     return this;
   }
 

@@ -44,6 +44,12 @@ public final class ProfilePage {
     this.resetButton = main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Reset").setExact(true));
   }
 
+  @Step("Открыть профиль без входа")
+  public WelcomePage openWithoutLogin() {
+    page.navigate(URL);
+    return new WelcomePage(page);
+  }
+
   @Step("Заполнить форму профиля: {firstName} / {surname} / {country} / {avatar}")
   public ProfilePage fillProfileForm(String firstName, String surname, String country, Path avatar) {
     fillFirstName(firstName);

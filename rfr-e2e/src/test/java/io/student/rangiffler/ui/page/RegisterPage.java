@@ -48,6 +48,12 @@ public final class RegisterPage {
     return this;
   }
 
+  @Step("Проверить, что открыта страница регистрации")
+  public RegisterPage checkThatOnRegisterPage() {
+    assertThat(page).hasURL(URL);
+    return this;
+  }
+
   @Step("Нажать Sign in после регистрации")
   public WelcomePage clickSignIn() {
     signInLink.click();
