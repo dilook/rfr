@@ -48,6 +48,12 @@ public final class RegisterPage {
     return this;
   }
 
+  @Step("Проверить переход на страницу регистрации rfr-auth")
+  public RegisterPage checkThatRedirectedToRegistration() {
+    assertThat(page).hasURL(URL);
+    return this;
+  }
+
   @Step("Нажать Sign in после регистрации")
   public WelcomePage clickSignIn() {
     signInLink.click();
