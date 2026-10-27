@@ -5,6 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.ui.page.ProfilePage;
+import io.student.rangiffler.ui.page.WelcomePage;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -25,6 +26,12 @@ public final class HeaderComponent {
   public HeaderComponent checkThatUserIsLoggedIn() {
     assertThat(logoutButton).isVisible();
     return this;
+  }
+
+  @Step("Нажать Logout в шапке")
+  public WelcomePage clickLogout() {
+    logoutButton.click();
+    return new WelcomePage(page);
   }
 
   @Step("Нажать Profile в шапке")

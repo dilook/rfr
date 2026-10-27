@@ -13,6 +13,6 @@ public final class RandomDataUtils {
   }
 
   public static String randomPassword() {
-    return UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+    return "p" + UUID.randomUUID().toString().replace("-", "").substring(0, 9);
   }
 }
