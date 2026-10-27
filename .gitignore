@@ -35,3 +35,9 @@ Thumbs.db
 # Local agent notes
 AGENTS.md
 docs/
+
+#jenv
+/.java-version
+
+# Playwright MCP
+/.playwright-mcp/
