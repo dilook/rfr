@@ -11,7 +11,7 @@
 
 ## Архитектура проекта
 
-- Структура пакетов — `rfr-e2e/README.md`, раздел «Архитектура»: `config`, `jupiter`, `data`, `api`, `ui`, `assertions`, `test`. Новые классы кладутся в существующие пакеты.
+- Структура пакетов — `rfr-e2e/README.md`, раздел «Архитектура»: `config`, `jupiter`, `data`, `utils`, `ui`, `test`. Новые классы кладутся в существующие пакеты.
 - Готовый пользователь — параметр `@User TestUser user` (аннотация в `jupiter/annotation` сама подключает `jupiter/extension/UserExtension`). 
 - Работа с БД — в `data`: `UserFixture(TestUser)` (`AutoCloseable`) отвечает за одного пользователя. `create()` создаёт его в `rangiffler-auth` через `data/clients/AuthUserDbClient` (spring-jdbc,
 `{bcrypt}`-пароль, права `read`/`write`); `close()` удаляет его по username из `rangiffler-api`

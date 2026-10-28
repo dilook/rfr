@@ -17,8 +17,4 @@ curl http://localhost:9001/.well-known/openid-configuration
 - `/oauth2/revoke` для публичного клиента работает благодаря `PublicClientRevocationAuthenticationConverter/Provider`.
 - Два `SecurityFilterChain` в `RangifflerAuthServiceConfig`.
 - OAuth-авторизации и сессии хранятся в памяти и теряются при перезапуске.
-
-## Подводные камни
-
-- TTL access token в документации указан по-разному (10 и 30 минут); фактическое значение —
-`access-token-time-to-live` в `rfr-auth/src/main/resources/application.yaml` (сейчас `30m`).
+- TTL access token — `access-token-time-to-live` в `rfr-auth/src/main/resources/application.yaml` (сейчас `30m`).

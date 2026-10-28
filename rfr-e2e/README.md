@@ -1,30 +1,38 @@
 # rfr-e2e
 
-E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`), Allure 3, `JdbcClient` для фикстур.
+E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`), Allure 3, spring-jdbc `JdbcClient` для фикстур.
 
 ## Запуск
 
 ```bash
 ./gradlew :rfr-e2e:installPlaywright                      # один раз: браузер Chromium
-./gradlew :rfr-e2e:test --tests '*RegistrationTest'
-./gradlew :rfr-e2e:test --tests '*MainPageTest'
+./gradlew e2e                                             # все тесты, прогоняются при каждом вызове
+./gradlew e2e -Prfr.headless=false                        # с видимым браузером
+./gradlew :rfr-e2e:test --tests '*RegistrationTest'       # один класс
 ./gradlew :rfr-e2e:allureReport                           # rfr-e2e/build/reports/allure-report/allureReport/index.html
 ```
 
 Стенд: MySQL `:3306`, `rfr-auth :9001`, `rfr-api :8081`, фронт `:3001` (см. корневой README).
 
+Тесты выполняются параллельно в 3 потока (`src/test/resources/junit-platform.properties`).
+
 ## Конфигурация
 
-`TestConfig` читает `-Drfr.<ключ>` → `RFR_<КЛЮЧ>` → значение по умолчанию. Gradle передаёт все `-Drfr.*` в тестовую JVM.
+`Config` ищет значение по порядку: system property `rfr.<ключ>` → переменная окружения `RFR_<КЛЮЧ>` (точки заменяются
+на `_`, например `RFR_FRONT_URL`) → значение по умолчанию. Из Gradle ключ передается как `-Prfr.<ключ>=…`: задача `test`
+пробрасывает все свойства проекта `rfr.*` в тестовую JVM.
 
 | Ключ | По умолчанию |
 |---|---|
-| `rfr.frontUrl` | `http://localhost:3001` |
-| `rfr.authUrl` | `http://localhost:9001` |
-| `rfr.apiUrl` | `http://localhost:8081` |
-| `rfr.dbUrl` | `jdbc:mysql://localhost:3306` (схема добавляется кодом) |
-| `rfr.dbUser` / `rfr.dbPassword` | `root` / `secret` |
-| `rfr.browser` / `rfr.headless` | `chromium` / `true` |
+| `rfr.front.url` | `http://localhost:3001` |
+| `rfr.auth.url` | `http://localhost:9001` |
+| `rfr.api.url` | `http://localhost:8081` |
+| `rfr.auth.jdbc.url` | `jdbc:mysql://localhost:3306/rangiffler-auth?serverTimezone=UTC` |
+| `rfr.api.jdbc.url` | `jdbc:mysql://localhost:3306/rangiffler-api?serverTimezone=UTC` |
+| `rfr.db.username` / `rfr.db.password` | `root` / `secret` |
+| `rfr.headless` | `true` |
+
+Браузер всегда Chromium (`PlaywrightOptions`).
 
 ## Архитектура
 
@@ -32,12 +40,12 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 
 | Пакет | Что лежит |
 |---|---|
-| `config` | `TestConfig` — единственная точка чтения настроек |
+| `config` | `Config` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
 | `jupiter` | всё про JUnit: `annotation` (`@User`), `extension` (`UserExtension`), позже `condition`, `probe` |
-| `data` | тестовые данные и их владельцы: `TestUser`, `UserFixture`; `db` — `Databases`, `Jdbc` |
+| `data` | тестовые данные и их владельцы: `TestUser`, `UserFixture`; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
-| `test` | только тесты, по фичам: `auth`, `profile`, позже `people`, … |
+| `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, позже `people`, … |
 
 Правила: в `jupiter` нет SQL и локаторов; в `data` нет JUnit; в `test` нет локаторов и SQL; `ThreadLocal` для состояния теста не используется — состояние живёт в Store расширения.
 
