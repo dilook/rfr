@@ -53,4 +53,6 @@ test {
         systemProperty name, value
     }
     jvmArgumentProviders.add({ ["-javaagent:${configurations.agent.singleFile}"] } as CommandLineArgumentProvider)
+    // Results depend on the running services and database, not only on the code
+    outputs.upToDateWhen { false }
 }

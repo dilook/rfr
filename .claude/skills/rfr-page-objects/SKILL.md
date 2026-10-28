@@ -20,7 +20,7 @@ description: Создаёт и меняет Page Objects и компоненты
 8. Без `checkThatOpened`, `checkPageLoaded`, `isLoaded`, `waitUntilLoaded`: `click`/`fill` ждут элемент, web-first assertions ждут состояние. URL и видимость страницы проверяем, только когда переход и есть предмет теста; такая проверка называется по переходу, который доказывает: `checkThatRedirectedToLogin()`. Имена вида `checkThatOn…Page` запрещены так же, как `checkThatOpened`.
 9. Локаторы: `getByRole` с точным `name`, `getByLabel`, `getByPlaceholder`, `getByText` с точным совпадением, `getByTestId`. Без `first()`/`nth()`, MUI-классов (`.Mui*`, `css-*`) и XPath; неуникальный элемент сужай родителем: `page.getByRole(AriaRole.BANNER).getByRole(…)`. Класс шаблона rfr-auth (`.form__*`) допустим, если у элемента нет роли и доступного имени (`.form__error`).
 10. Проверка не должна быть тавтологией локатора: `assertThat(heading("Travels map")).hasText("Travels map")` ничего не доказывает. Ожидаемое значение приходит из теста (`checkThatUsername(username)`). Проверка должна падать при реальной поломке действия: если одно свойство от действия не меняется (`value` при Show password), проверяй его вместе с тем, что меняется (`type`).
-11. Вход только через UI; `access_token`/`id_token` в `localStorage` не подставлять (до занятия 13).
+11. Вход только через UI; `access_token`/`id_token` в `localStorage` не подставлять.
 12. Без комментариев и Javadoc: смысл передают имена методов и текст `@Step`.
 
 ## Рецепты
