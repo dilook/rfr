@@ -34,8 +34,21 @@
       "Bash(git push *)",
       "Bash(rtk git push)",
       "Bash(rtk git push *)",
+      "Bash(git * push)",
+      "Bash(git * push *)",
+      "Bash(rtk git * push)",
+      "Bash(rtk git * push *)",
       "Bash(rm)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Bash(unlink *)",
+      "Bash(find * -delete)",
+      "Bash(find * -delete *)",
+      "Bash(rtk find * -delete)",
+      "Bash(rtk find * -delete *)",
+      "Bash(git rm)",
+      "Bash(git rm *)",
+      "Bash(rtk git rm)",
+      "Bash(rtk git rm *)"
     ]
   },
   "hooks": {
