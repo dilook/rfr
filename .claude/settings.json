@@ -37,5 +37,20 @@
       "Bash(rm)",
       "Bash(rm *)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/compile.sh\"",
+            "timeout": 180,
+            "statusMessage": "Compiling the edited module"
+          }
+        ]
+      }
+    ]
   }
 }
