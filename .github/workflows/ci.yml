@@ -26,6 +26,8 @@ jobs:
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # Lets '!' patterns exclude files; with the default 'some' they would match everything else instead
+          predicate-quantifier: some-with-excludes
           filters: |
             ci: .github/workflows/ci.yml
             shared: &shared
@@ -34,15 +36,24 @@ jobs:
               - gradle.properties
               - gradle/**
               - gradlew
-            auth: rfr-auth/**
-            api: rfr-api/**
-            e2e: rfr-e2e/**
+            auth:
+              - rfr-auth/**
+              - '!**/*.md'
+            api:
+              - rfr-api/**
+              - '!**/*.md'
+            e2e:
+              - rfr-e2e/**
+              - '!**/*.md'
             backend:
               - *shared
               - rfr-auth/**
               - rfr-api/**
               - rfr-e2e/**
-            frontend: rfr-gql-client/**
+              - '!**/*.md'
+            frontend:
+              - rfr-gql-client/**
+              - '!**/*.md'
 
   backend:
     needs: changes
