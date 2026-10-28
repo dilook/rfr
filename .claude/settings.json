@@ -5,5 +5,37 @@
   "enabledMcpjsonServers": [
     "playwright"
   ],
-  "enableAllProjectMcpServers": true
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": [
+      "Bash(bash localenv.sh)",
+      "Bash(docker compose up *)",
+      "Bash(docker compose down)",
+      "Bash(./gradlew runAll)",
+      "Bash(rtk gradlew runAll)",
+      "Bash(./gradlew :rfr-auth:bootRun)",
+      "Bash(rtk gradlew :rfr-auth:bootRun)",
+      "Bash(./gradlew :rfr-api:bootRun)",
+      "Bash(rtk gradlew :rfr-api:bootRun)",
+      "Bash(npm run dev)",
+      "Bash(rtk npm run dev)",
+      "Bash(bash ports.sh)",
+      "Bash(./gradlew e2e)",
+      "Bash(./gradlew e2e *)",
+      "Bash(rtk gradlew e2e)",
+      "Bash(rtk gradlew e2e *)",
+      "Bash(./gradlew :rfr-e2e:test)",
+      "Bash(./gradlew :rfr-e2e:test *)",
+      "Bash(rtk gradlew :rfr-e2e:test)",
+      "Bash(rtk gradlew :rfr-e2e:test *)"
+    ],
+    "deny": [
+      "Bash(git push)",
+      "Bash(git push *)",
+      "Bash(rtk git push)",
+      "Bash(rtk git push *)",
+      "Bash(rm)",
+      "Bash(rm *)"
+    ]
+  }
 }
