@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "courier@yegor256": true
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
+}
