@@ -31,6 +31,9 @@ docker compose down                    # остановить; данные ос
 ./gradlew runAll                       # rfr-auth (:9001) и rfr-api (:8081) вместе; Ctrl+C гасит оба
 bash ports.sh                          # убить процессы на 9001/8081/3001
 
+./gradlew e2e                          # все тесты rfr-e2e, прогоняются при каждом вызове; нужны запущенные сервисы и фронт
+./gradlew e2e -Prfr.headless=false     # с видимым браузером
+
 ./gradlew build                        # сборка всех Java-модулей
 ./gradlew :rfr-api:generateJava        # DGS codegen из query.graphqls (выполняется и при сборке)
 ```

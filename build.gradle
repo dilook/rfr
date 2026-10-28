@@ -49,3 +49,9 @@ tasks.register('runAll') {
     description = 'Runs rfr-auth and rfr-api together'
     dependsOn ':rfr-auth:bootRun', ':rfr-api:bootRun'
 }
+
+tasks.register('e2e') {
+    group = 'verification'
+    description = 'Runs all rfr-e2e tests'
+    dependsOn ':rfr-e2e:test'
+}
