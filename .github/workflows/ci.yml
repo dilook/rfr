@@ -2,12 +2,51 @@ name: CI
 
 on:
   pull_request:
+  # Builds on master populate the Gradle and npm caches that pull requests can read
+  push:
+    branches: [master]
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ci: ${{ steps.filter.outputs.ci }}
+      shared: ${{ steps.filter.outputs.shared }}
+      auth: ${{ steps.filter.outputs.auth }}
+      api: ${{ steps.filter.outputs.api }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            ci: .github/workflows/ci.yml
+            shared: &shared
+              - build.gradle
+              - settings.gradle
+              - gradle.properties
+              - gradle/**
+              - gradlew
+            auth: rfr-auth/**
+            api: rfr-api/**
+            e2e: rfr-e2e/**
+            backend:
+              - *shared
+              - rfr-auth/**
+              - rfr-api/**
+              - rfr-e2e/**
+            frontend: rfr-gql-client/**
+
   backend:
+    needs: changes
+    if: github.event_name == 'push' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -16,9 +55,21 @@ jobs:
           distribution: temurin
           java-version: 25
       - uses: gradle/actions/setup-gradle@v6
-      - run: ./gradlew :rfr-auth:build :rfr-api:build :rfr-e2e:testClasses
+      - env:
+          ALL: ${{ github.event_name == 'push' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.shared == 'true' }}
+          AUTH: ${{ needs.changes.outputs.auth }}
+          API: ${{ needs.changes.outputs.api }}
+          E2E: ${{ needs.changes.outputs.e2e }}
+        run: |
+          tasks=()
+          [[ $ALL == true || $AUTH == true ]] && tasks+=(:rfr-auth:build)
+          [[ $ALL == true || $API == true ]] && tasks+=(:rfr-api:build)
+          [[ $ALL == true || $E2E == true ]] && tasks+=(:rfr-e2e:testClasses)
+          ./gradlew "${tasks[@]}"
 
   frontend:
+    needs: changes
+    if: github.event_name == 'push' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
