@@ -24,26 +24,16 @@ MySQL — порт 3306, пользователь `root`, пароль `secret`.
 ## Команды
 
 ```bash
-# MySQL в Docker (rfr-mysql, root/secret, порт 3306).
-# ВНИМАНИЕ: скрипт останавливает и удаляет ВСЕ docker-контейнеры на машине.
-bash localenv.sh
+# MySQL в Docker (compose.yaml: rfr-mysql, root/secret, порт 3306, том mysql-volume).
+bash localenv.sh                       # docker compose up -d mysql --wait — ждёт healthcheck
+docker compose down                    # остановить; данные остаются в mysql-volume
 
-# Бэкенды (запускать из каталога модуля; rfr-api требует запущенного rfr-auth — JWKS)
-cd rfr-auth && ../gradlew bootRun     # :9001
-cd rfr-api  && ../gradlew bootRun     # :8081, /graphql, /graphiql
-
-# Фронт (:3001 — порт зашит в redirect URI клиента в rfr-auth)
-cd rfr-gql-client && npm i && npm run dev
-npm run build    # tsc + vite build
-npm run lint     # eslint, --max-warnings 0
-
+./gradlew runAll                       # rfr-auth (:9001) и rfr-api (:8081) вместе; Ctrl+C гасит оба
 bash ports.sh                          # убить процессы на 9001/8081/3001
 
 ./gradlew build                        # сборка всех Java-модулей
 ./gradlew :rfr-api:generateJava        # DGS codegen из query.graphqls (выполняется и при сборке)
 ```
-
-Unit-тестов в `rfr-api`/`rfr-auth` нет.
 
 ## Архитектура
 

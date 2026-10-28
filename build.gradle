@@ -42,3 +42,10 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs.add('-parameters')
 }
+
+// Both bootRun tasks block until their apps stop, so they start together only with org.gradle.parallel=true
+tasks.register('runAll') {
+    group = 'application'
+    description = 'Runs rfr-auth and rfr-api together'
+    dependsOn ':rfr-auth:bootRun', ':rfr-api:bootRun'
+}
