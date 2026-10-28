@@ -19,10 +19,6 @@ npm run lint    # eslint, --max-warnings 0
 
 - Каждая GraphQL-операция — отдельный хук в `src/hooks` с именованной операцией (`query GetFeed`, `mutation FriendshipAction`).
   E2E-тесты перехватывают запросы по `operationName`, поэтому переименование операции требует правки тестов.
-- Адреса сервисов и `client_id` — переменные `VITE_*` в `.env`. Dev-сервер слушает `VITE_FRONT_HOST:3001` (`vite.config.ts`);
-  порт должен совпадать с redirect URI клиента в `rfr-auth`.
-- Маршруты: `/` (Login и Register), `/my-travels`, `/people`, `/profile` (защищённые, через `PrivateRoute`).
-- Токены `access_token` и `id_token` лежат в localStorage. В `rfr-api` уходит только access token.
+- Порт dev-сервера 3001 должен совпадать с redirect URI клиента в `rfr-auth`.
 - Кэш Apollo сразу обновляет карточку ответом мутации. Успешный snackbar не доказывает сохранение: проверяй повторным чтением.
 - Компоненты берутся из MUI, свои с нуля не пишутся.
-
