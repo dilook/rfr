@@ -7,15 +7,18 @@ case "${file#"$root"/}" in
   rfr-api/src/main/*.java) module=rfr-api; cmd=(./gradlew -q :rfr-api:compileJava) ;;
   rfr-auth/src/main/*.java) module=rfr-auth; cmd=(./gradlew -q :rfr-auth:compileJava) ;;
   rfr-e2e/src/test/*.java) module=rfr-e2e; cmd=(./gradlew -q :rfr-e2e:compileTestJava) ;;
-  rfr-gql-client/src/*.ts | rfr-gql-client/src/*.tsx) module=rfr-gql-client; cmd=(npx --no-install --prefix rfr-gql-client tsc -p rfr-gql-client) ;;
+  rfr-gql-client/src/*.ts | rfr-gql-client/src/*.tsx)
+    module=rfr-gql-client
+    cmd=(npx --no-install --prefix rfr-gql-client tsc -p rfr-gql-client)
+    lint=(npx --no-install eslint --max-warnings 0 "${file#"$root"/rfr-gql-client/}") ;;
   *) exit 0 ;;
 esac
 cd "$root" || exit 0
-if ! output=$("${cmd[@]}" 2>&1); then
+if ! output=$("${cmd[@]}" 2>&1 && if ((${#lint[@]})); then (cd "$module" && "${lint[@]}") 2>&1; fi); then
   # Gradle repeats javac errors in its FAILURE summary; keep that summary only when nothing precedes it
   errors=$(sed '/^FAILURE:/,$d' <<<"$output")
   [[ -n "${errors//[[:space:]]/}" ]] || errors=$output
-  echo "Compilation of $module failed after editing $file" >&2
+  echo "Compilation or lint of $module failed after editing $file" >&2
   tail -n 40 <<<"$errors" >&2
   exit 2
 fi
