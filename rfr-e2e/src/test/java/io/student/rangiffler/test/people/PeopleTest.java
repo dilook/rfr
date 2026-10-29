@@ -10,6 +10,8 @@ import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 @UsePlaywright(PlaywrightOptions.class)
 public class PeopleTest {
 
@@ -17,9 +19,9 @@ public class PeopleTest {
   @DisplayName("Друзья и входящие приглашения из @User видны на странице People")
   void friendsAndIncomeInvitationsShouldBeCreated(@User(friends = 2, incomeInvitations = 1) TestUser user, Page page) {
     openPeople(user, page)
-        .checkThatPeopleCount(2)
+        .checkThatPeopleAre(usernames(user.friends()))
         .clickIncomeInvitationsTab()
-        .checkThatPeopleCount(1);
+        .checkThatPeopleAre(usernames(user.incomeInvitations()));
   }
 
   @Test
@@ -40,5 +42,9 @@ public class PeopleTest {
         .fillLoginForm(user.username(), user.password())
         .clickSignIn()
         .goToPeople();
+  }
+
+  private static List<String> usernames(List<TestUser> users) {
+    return users.stream().map(TestUser::username).toList();
   }
 }

@@ -26,7 +26,7 @@ public final class UserWithFriendsFixture implements UserFixture {
 
   @Override
   public TestUser user() {
-    return origin.user();
+    return origin.user().withFriends(friends.stream().map(UserFixture::user).toList());
   }
 
   @Override

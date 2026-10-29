@@ -26,7 +26,7 @@ public final class UserWithIncomeInvitationsFixture implements UserFixture {
 
   @Override
   public TestUser user() {
-    return origin.user();
+    return origin.user().withIncomeInvitations(inviters.stream().map(UserFixture::user).toList());
   }
 
   @Override

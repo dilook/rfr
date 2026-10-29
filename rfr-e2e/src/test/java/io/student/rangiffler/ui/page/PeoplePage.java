@@ -7,6 +7,8 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
 
+import java.util.List;
+
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 public final class PeoplePage {
@@ -73,9 +75,12 @@ public final class PeoplePage {
     return this;
   }
 
-  @Step("Проверить, что в таблице людей {count} строк")
-  public PeoplePage checkThatPeopleCount(int count) {
-    assertThat(people).hasCount(count);
+  @Step("Проверить, что в таблице ровно пользователи {usernames}")
+  public PeoplePage checkThatPeopleAre(List<String> usernames) {
+    assertThat(people).hasCount(usernames.size());
+    for (String username : usernames) {
+      assertThat(person(username)).isVisible();
+    }
     return this;
   }
 
