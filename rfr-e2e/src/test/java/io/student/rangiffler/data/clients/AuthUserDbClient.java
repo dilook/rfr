@@ -2,7 +2,6 @@ package io.student.rangiffler.data.clients;
 
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
-import io.student.rangiffler.data.TestUser;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.JdbcTransactionManager;

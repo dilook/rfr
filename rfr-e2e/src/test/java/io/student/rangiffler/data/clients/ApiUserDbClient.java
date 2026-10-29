@@ -7,6 +7,8 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
+
 public class ApiUserDbClient {
 
   private final JdbcTemplate jdbcTemplate;
@@ -25,6 +27,35 @@ public class ApiUserDbClient {
     jdbcTemplate.update(
         "insert into `user` (username, country_id) values (?, (select id from `country` where code = 'ru'))",
         username
+    );
+  }
+
+  @Step("Сделать друзьями в БД rangiffler-api: {requester} и {addressee}")
+  public void createFriendship(String requester, String addressee) {
+    jdbcTemplate.update(
+        "insert into `friendship` (id, requester_id, addressee_id, status, created_at, responded_at) "
+            + "values (UUID_TO_BIN(UUID(), true), (select id from `user` where username = ?), "
+            + "(select id from `user` where username = ?), 'ACCEPTED', now(6), now(6))",
+        requester, addressee
+    );
+  }
+
+  @Step("Отправить приглашение в друзья в БД rangiffler-api: {requester} → {addressee}")
+  public void createInvitation(String requester, String addressee) {
+    jdbcTemplate.update(
+        "insert into `friendship` (id, requester_id, addressee_id, status, created_at) "
+            + "values (UUID_TO_BIN(UUID(), true), (select id from `user` where username = ?), "
+            + "(select id from `user` where username = ?), 'PENDING', now(6))",
+        requester, addressee
+    );
+  }
+
+  @Step("Прочитать статусы дружбы пользователя из БД rangiffler-api: {username}")
+  public List<String> friendshipStatuses(String username) {
+    return jdbcTemplate.queryForList(
+        "select f.status from `friendship` f join `user` u on u.id in (f.requester_id, f.addressee_id) "
+            + "where u.username = ? order by f.status",
+        String.class, username
     );
   }
 
