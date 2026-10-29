@@ -41,8 +41,8 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 | Пакет | Что лежит |
 |---|---|
 | `config` | `Config` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
-| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends` и `incomeInvitations`), `extension` (`UserExtension`, `UserRequest` — превращает аннотацию в `UserFixture`), позже `condition`, `probe` |
-| `data` | тестовые данные и их владельцы: `TestUser`, `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
+| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends` и `incomeInvitations`), `extension` (`UserExtension`), позже `condition`, `probe` |
+| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
 | `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, позже `people`, … |

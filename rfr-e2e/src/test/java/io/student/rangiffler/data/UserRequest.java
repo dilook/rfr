@@ -1,18 +1,11 @@
-package io.student.rangiffler.jupiter.extension;
-
-import io.student.rangiffler.data.SingleUserFixture;
-import io.student.rangiffler.data.TestUser;
-import io.student.rangiffler.data.UserFixture;
-import io.student.rangiffler.data.UserWithFriendsFixture;
-import io.student.rangiffler.data.UserWithIncomeInvitationsFixture;
-import io.student.rangiffler.jupiter.annotation.User;
+package io.student.rangiffler.data;
 
 /**
- * Пользователь, описанный аннотацией {@link User}, ещё не созданный в БД.
+ * Описание тестового пользователя, ещё не созданного в БД: сколько у него друзей и входящих приглашений.
  */
-record UserRequest(int friends, int incomeInvitations) {
+public record UserRequest(int friends, int incomeInvitations) {
 
-  UserRequest {
+  public UserRequest {
     if (friends < 0) {
       throw new IllegalArgumentException("Число друзей не может быть отрицательным: " + friends);
     }
@@ -21,7 +14,7 @@ record UserRequest(int friends, int incomeInvitations) {
     }
   }
 
-  UserFixture fixture() {
+  public UserFixture fixture() {
     UserFixture fixture = new SingleUserFixture(TestUser.unique());
     if (friends > 0) {
       fixture = new UserWithFriendsFixture(fixture, friends);
