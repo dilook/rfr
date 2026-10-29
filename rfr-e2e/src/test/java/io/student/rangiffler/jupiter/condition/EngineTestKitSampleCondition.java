@@ -9,12 +9,12 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  */
 public final class EngineTestKitSampleCondition implements ExecutionCondition {
 
-    public static final String ENABLED = "engine-test-kit.sample.enabled";
+  public static final String ENABLED = "engine-test-kit.sample.enabled";
 
-    @Override
-    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        return context.getConfigurationParameter(ENABLED, Boolean::parseBoolean).orElse(false)
-                ? ConditionEvaluationResult.enabled("Образец запущен из EngineTestKit")
-                : ConditionEvaluationResult.disabled("Образец для EngineTestKit не запускается в обычном прогоне");
-    }
+  @Override
+  public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+    return context.getConfigurationParameter(ENABLED, Boolean::parseBoolean).orElse(false)
+        ? ConditionEvaluationResult.enabled("Образец запущен из EngineTestKit")
+        : ConditionEvaluationResult.disabled("Образец для EngineTestKit не запускается в обычном прогоне");
+  }
 }

@@ -17,7 +17,7 @@ public class RegistrationTest {
 
   @AfterEach
   void deleteRegisteredUser() {
-      new SingleUserFixture(user).close();
+    new SingleUserFixture(user).close();
   }
 
   @Test
