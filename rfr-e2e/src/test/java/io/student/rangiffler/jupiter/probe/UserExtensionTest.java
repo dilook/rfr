@@ -1,11 +1,11 @@
-package io.student.rangiffler.test.jupiter;
+package io.student.rangiffler.jupiter.probe;
 
 import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.data.clients.ApiUserDbClient;
 import io.student.rangiffler.data.clients.AuthUserDbClient;
-import io.student.rangiffler.jupiter.annotation.EngineTestKitSample;
+import io.student.rangiffler.jupiter.annotation.ProbeTarget;
 import io.student.rangiffler.jupiter.annotation.User;
-import io.student.rangiffler.jupiter.condition.EngineTestKitSampleCondition;
+import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -111,7 +111,7 @@ class UserExtensionTest {
   private static EngineExecutionResults run(Class<?> sample) {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(DiscoverySelectors.selectClass(sample))
-        .configurationParameter(EngineTestKitSampleCondition.ENABLED, "true")
+        .configurationParameter(ProbeTargetCondition.ENABLED, "true")
         .execute();
   }
 
@@ -144,7 +144,7 @@ class UserExtensionTest {
     return String.join(",", users.stream().map(TestUser::username).toList());
   }
 
-  @EngineTestKitSample
+  @ProbeTarget
   static class CreatedUser {
 
     @Test
@@ -157,7 +157,7 @@ class UserExtensionTest {
     }
   }
 
-  @EngineTestKitSample
+  @ProbeTarget
   static class FailedUser {
 
     @Test
@@ -167,7 +167,7 @@ class UserExtensionTest {
     }
   }
 
-  @EngineTestKitSample
+  @ProbeTarget
   static class TwoUsers {
 
     @Test
@@ -176,7 +176,7 @@ class UserExtensionTest {
     }
   }
 
-  @EngineTestKitSample
+  @ProbeTarget
   static class UserWithFriendsAndInvitations {
 
     @Test
@@ -189,7 +189,7 @@ class UserExtensionTest {
     }
   }
 
-  @EngineTestKitSample
+  @ProbeTarget
   static class UserInBeforeEach {
 
     @BeforeEach
@@ -201,7 +201,7 @@ class UserExtensionTest {
     }
   }
 
-  @EngineTestKitSample
+  @ProbeTarget
   static class UserOnString {
 
     @Test

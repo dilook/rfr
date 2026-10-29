@@ -1,6 +1,6 @@
 # rfr-e2e
 
-E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`), Allure 3, spring-jdbc `JdbcClient` для фикстур.
+E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`), Allure 3, spring-jdbc `JdbcTemplate` для фикстур, JUnit Platform TestKit для тестов расширений.
 
 ## Запуск
 
@@ -9,6 +9,7 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 ./gradlew e2e                                             # все тесты, прогоняются при каждом вызове
 ./gradlew e2e -Prfr.headless=false                        # с видимым браузером
 ./gradlew :rfr-e2e:test --tests '*RegistrationTest'       # один класс
+./gradlew :rfr-e2e:test --tests '*.jupiter.probe.*'       # тесты расширений, нужна только MySQL
 ./gradlew :rfr-e2e:allureReport                           # rfr-e2e/build/reports/allure-report/allureReport/index.html
 ```
 
@@ -41,13 +42,20 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 | Пакет | Что лежит |
 |---|---|
 | `config` | `Config` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
-| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends` и `incomeInvitations`, `@EngineTestKitSample`), `extension` (`UserExtension`), `condition` (`EngineTestKitSampleCondition` — класс-образец выполняется только из EngineTestKit), позже `probe` |
+| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends` и `incomeInvitations`, `@ProbeTarget`), `extension` (`UserExtension`), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest` — тесты расширений через EngineTestKit) |
 | `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
-| `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, `people`, `jupiter` (расширения через EngineTestKit), … |
+| `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, `people` (друзья и приглашения), … |
 
-Правила: в `jupiter` нет SQL и локаторов; в `data` нет JUnit; в `test` нет локаторов и SQL; `ThreadLocal` для состояния теста не используется — состояние живёт в Store расширения.
+Правила: в `jupiter` нет SQL и локаторов, тесты в нём лежат только в `probe`; в `data` нет JUnit; в `test` нет локаторов и SQL; `ThreadLocal` для состояния теста не используется — состояние живёт в Store расширения.
+
+## Тесты расширений
+
+Тест в `jupiter/probe` запускает вложенные классы-образцы через `EngineTestKit` и проверяет события запуска и БД после
+закрытия Store. Образцы помечены `@ProbeTarget`: в обычном прогоне они отключены и видны в отчёте как skipped,
+а EngineTestKit включает их параметром `probe.enabled=true`. Что образец получил от расширения, он
+публикует через `TestReporter`.
 
 ## Агент
 

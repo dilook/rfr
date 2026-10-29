@@ -1,6 +1,6 @@
 package io.student.rangiffler.jupiter.annotation;
 
-import io.student.rangiffler.jupiter.condition.EngineTestKitSampleCondition;
+import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.annotation.ElementType;
@@ -10,6 +10,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(EngineTestKitSampleCondition.class)
-public @interface EngineTestKitSample {
+@ExtendWith(ProbeTargetCondition.class)
+public @interface ProbeTarget {
 }
