@@ -1,6 +1,10 @@
 package io.student.rangiffler.jupiter.probe;
 
+import io.student.rangiffler.data.SingleUserFixture;
 import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.data.UserFixture;
+import io.student.rangiffler.data.UserWithFriendsFixture;
+import io.student.rangiffler.data.UserWithIncomeInvitationsFixture;
 import io.student.rangiffler.data.clients.ApiUserDbClient;
 import io.student.rangiffler.data.clients.AuthUserDbClient;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;
@@ -56,6 +60,22 @@ class UserExtensionTest {
   void userShouldBeDeletedAfterFailedTest() {
     String username = entry(FailedUser.class).get("username");
     assertEquals(List.of(), existing(List.of(username)), "Пользователь не удалён после упавшего теста");
+  }
+
+  @Test
+  @DisplayName("close() удаляет пользователя, созданного до падения внутри цепочки, и несозданных друзей не трогает")
+  void closeShouldDeleteUsersCreatedBeforeFailureInsideChain() {
+    UserFixture fixture = new UserWithFriendsFixture(new FailingFixture(new SingleUserFixture(TestUser.unique())), 1);
+    assertEquals(List.of(), leftovers(fixture), "После падения create() внутри цепочки в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("close() удаляет всех пользователей цепочки после падения в самом конце create()")
+  void closeShouldDeleteAllUsersAfterFailureAtEndOfChain() {
+    UserFixture fixture = new FailingFixture(
+        new UserWithIncomeInvitationsFixture(new UserWithFriendsFixture(new SingleUserFixture(TestUser.unique()), 2), 1)
+    );
+    assertEquals(List.of(), leftovers(fixture), "После падения create() в конце цепочки в БД остались пользователи");
   }
 
   @Test
@@ -130,6 +150,21 @@ class UserExtensionTest {
         .orElseThrow(() -> new IllegalStateException("Образец " + sample.getSimpleName() + " не упал"));
   }
 
+  private static List<String> leftovers(UserFixture fixture) {
+    try {
+      fixture.create();
+    } catch (CreateFailure expected) {
+      fixture.close();
+    }
+    TestUser user = fixture.user();
+    return existing(
+        Stream.of(List.of(user), user.friends(), user.incomeInvitations())
+            .flatMap(List::stream)
+            .map(TestUser::username)
+            .toList()
+    );
+  }
+
   private static List<String> existing(List<String> usernames) {
     return usernames.stream()
         .filter(username -> AUTH_USER_DB_CLIENT.userExists(username) || API_USER_DB_CLIENT.userExists(username))
@@ -142,6 +177,38 @@ class UserExtensionTest {
 
   private static String joined(List<TestUser> users) {
     return String.join(",", users.stream().map(TestUser::username).toList());
+  }
+
+  private static final class FailingFixture implements UserFixture {
+
+    private final UserFixture origin;
+
+    private FailingFixture(UserFixture origin) {
+      this.origin = origin;
+    }
+
+    @Override
+    public TestUser user() {
+      return origin.user();
+    }
+
+    @Override
+    public void create() {
+      origin.create();
+      throw new CreateFailure();
+    }
+
+    @Override
+    public void close() {
+      origin.close();
+    }
+  }
+
+  private static final class CreateFailure extends RuntimeException {
+
+    private CreateFailure() {
+      super("Проба намеренно прерывает create() после origin");
+    }
   }
 
   @ProbeTarget
