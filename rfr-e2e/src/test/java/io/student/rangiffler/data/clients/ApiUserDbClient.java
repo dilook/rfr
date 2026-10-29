@@ -20,6 +20,39 @@ public class ApiUserDbClient {
     this.transactionTemplate = new TransactionTemplate(new JdbcTransactionManager(dataSource));
   }
 
+  @Step("Создать пользователя в БД rangiffler-api: {username}")
+  public void createUser(String username) {
+    jdbcTemplate.update(
+        "insert into `user` (username, country_id) values (?, (select id from `country` where code = 'ru'))",
+        username
+    );
+  }
+
+  @Step("Сделать друзьями в БД rangiffler-api: {requester} и {addressee}")
+  public void createFriendship(String requester, String addressee) {
+    jdbcTemplate.update(
+        "insert into `friendship` (id, requester_id, addressee_id, status, created_at, responded_at) "
+            + "values (UUID_TO_BIN(UUID(), true), (select id from `user` where username = ?), "
+            + "(select id from `user` where username = ?), 'ACCEPTED', now(6), now(6))",
+        requester, addressee
+    );
+  }
+
+  @Step("Отправить приглашение в друзья в БД rangiffler-api: {requester} → {addressee}")
+  public void createInvitation(String requester, String addressee) {
+    jdbcTemplate.update(
+        "insert into `friendship` (id, requester_id, addressee_id, status, created_at) "
+            + "values (UUID_TO_BIN(UUID(), true), (select id from `user` where username = ?), "
+            + "(select id from `user` where username = ?), 'PENDING', now(6))",
+        requester, addressee
+    );
+  }
+
+  @Step("Проверить, есть ли пользователь в БД rangiffler-api: {username}")
+  public boolean userExists(String username) {
+    return jdbcTemplate.queryForObject("select count(*) from `user` where username = ?", Integer.class, username) > 0;
+  }
+
   @Step("Удалить пользователя из БД rangiffler-api: {username}")
   public void deleteUserByUsername(String username) {
     transactionTemplate.executeWithoutResult(status -> {

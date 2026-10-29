@@ -36,7 +36,7 @@ rfr/
 │   ├── Реальные контроллеры для пользователей и стран
 │   └── Flyway миграции БД
 ├── rfr-gql-client/        # React + TypeScript Frontend (готов)
-└── rfr-e2e/               # E2E тесты: JUnit 6 + Playwright + Allure 3 (заготовка)
+└── rfr-e2e/               # E2E тесты: JUnit 6 + Playwright + Allure 3 (вход, регистрация, профиль)
 ```
 
 **Порты:**
@@ -80,7 +80,9 @@ Mock контроллеры возвращают статические данн
 bash localenv.sh
 ```
 
-Скрипт запустит MySQL в Docker контейнере.
+Скрипт поднимет MySQL 8.4 через Docker Compose (`compose.yaml`, контейнер `rfr-mysql`, `root`/`secret`, порт 3306)
+и дождется, пока healthcheck сообщит о готовности. Данные хранятся в томе `mysql-volume` и переживают перезапуск контейнера.
+Остановить - `docker compose down`.
 
 #### 2. Запусти rfr-auth:
 
@@ -100,7 +102,16 @@ cd rfr-api
 
 rfr-api стартанет на порту 8081: http://localhost:8081/graphql
 
-GraphiQL интерфейс доступен по адресу: http://localhost:8081/graphiql
+GraphiQL включен (http://localhost:8081/graphiql), но в текущей конфигурации `GET /graphiql` требует аутентификации -
+как открыть его локально, описано в разделе "Security config".
+
+Шаги 2 и 3 можно заменить одной командой из корня проекта - она запустит оба сервиса, Ctrl+C остановит оба:
+
+```bash
+./gradlew runAll
+```
+
+Если порты 9001, 8081 или 3001 заняты зависшими процессами, освободить их можно скриптом `bash ports.sh`.
 
 #### 4. Обнови зависимости и запускай фронт:
 
@@ -118,6 +129,19 @@ npm run dev
 
 Mock контроллеры в rfr-api будут возвращать статические данные из JSON файлов для ленты фотографий.
 Реальная работа с пользователями и странами уже реализована через базу данных.
+
+#### 6. Прогони e2e-тесты
+
+Нужны запущенные MySQL, оба сервиса и фронт (шаги 1-4). Из корня проекта:
+
+```bash
+./gradlew :rfr-e2e:installPlaywright   # один раз: браузер Chromium
+./gradlew e2e                          # все тесты rfr-e2e, прогоняются при каждом вызове
+./gradlew e2e -Prfr.headless=false     # с видимым браузером
+./gradlew :rfr-e2e:allureReport        # отчет: rfr-e2e/build/reports/allure-report/allureReport/index.html
+```
+
+Настройки и структура тестов описаны в `rfr-e2e/README.md`.
 
 
 # Что дальше?
@@ -481,14 +505,15 @@ message UsersResponse {
 (`JwtAuthenticationConverter` в `RangifflerApiConfiguration`). `id_token` предназначен фронтенду (`aud` = client_id),
 поэтому API его отвергает с 401. Фронтенд использует `id_token` только как `id_token_hint` при logout.
 
-   Access token живет 10 минут. При logout фронтенд отзывает его через `POST /oauth2/revoke` (RFC 7009, публичный клиент
+   Access token живет 30 минут (`access-token-time-to-live` в `rfr-auth/src/main/resources/application.yaml`). При logout фронтенд отзывает его через `POST /oauth2/revoke` (RFC 7009, публичный клиент
 идентифицируется по `client_id`), а затем вызывает OIDC logout. Учтите: access token - самодостаточный JWT, `rfr-api`
 проверяет его локально по подписи и не знает об отзыве, поэтому отозванный токен продолжает приниматься API до `exp`.
 Отзыв делает недействительной авторизацию на стороне `rfr-auth`; мгновенный отказ API потребовал бы opaque-токенов
 и introspection.
 
-   Для локального тестирования вы можете открыть страницу
-GraphiQL (`spring.graphql.graphiql.enabled: true` уже включен в `application.yml`):
+   GraphiQL уже включен (`spring.graphql.graphiql.enabled: true` в `application.yml`), но текущий `RangifflerApiConfiguration`
+пропускает без авторизации только `POST /graphql`, поэтому страница `GET /graphiql` требует аутентификации. Для локального
+тестирования ее можно открыть, добавив в `SecurityFilterChain` разрешение для `/graphiql/**`:
 ```java
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
