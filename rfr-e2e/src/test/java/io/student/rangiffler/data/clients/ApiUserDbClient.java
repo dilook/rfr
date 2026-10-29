@@ -20,6 +20,14 @@ public class ApiUserDbClient {
     this.transactionTemplate = new TransactionTemplate(new JdbcTransactionManager(dataSource));
   }
 
+  @Step("Создать пользователя в БД rangiffler-api: {username}")
+  public void createUser(String username) {
+    jdbcTemplate.update(
+        "insert into `user` (username, country_id) values (?, (select id from `country` where code = 'ru'))",
+        username
+    );
+  }
+
   @Step("Удалить пользователя из БД rangiffler-api: {username}")
   public void deleteUserByUsername(String username) {
     transactionTemplate.executeWithoutResult(status -> {

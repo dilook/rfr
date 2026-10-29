@@ -20,8 +20,9 @@ public final class UserFixture implements AutoCloseable {
     return user;
   }
 
-  public TestUser create() {
-    return AUTH_USER_DB_CLIENT.createUser(user.username(), user.password());
+  public void create() {
+    AUTH_USER_DB_CLIENT.createUser(user.username(), user.password());
+    API_USER_DB_CLIENT.createUser(user.username());
   }
 
   @Override

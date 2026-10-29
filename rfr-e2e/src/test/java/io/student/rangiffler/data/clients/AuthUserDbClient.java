@@ -28,7 +28,7 @@ public class AuthUserDbClient {
   }
 
   @Step("Создать пользователя в БД rangiffler-auth: {username} / {password}")
-  public TestUser createUser(String username, String password) {
+  public void createUser(String username, String password) {
     UUID id = UUID.randomUUID();
     transactionTemplate.executeWithoutResult(status -> {
       jdbcTemplate.update(
@@ -43,7 +43,6 @@ public class AuthUserDbClient {
         );
       }
     });
-    return new TestUser(username, password);
   }
 
   @Step("Удалить пользователя из БД rangiffler-auth: {username}")
