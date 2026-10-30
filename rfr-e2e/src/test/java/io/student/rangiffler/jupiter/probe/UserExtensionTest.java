@@ -5,6 +5,7 @@ import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.data.UserFixture;
 import io.student.rangiffler.data.UserWithFriendsFixture;
 import io.student.rangiffler.data.UserWithIncomeInvitationsFixture;
+import io.student.rangiffler.data.UserWithOutcomeInvitationsFixture;
 import io.student.rangiffler.data.clients.ApiUserDbClient;
 import io.student.rangiffler.data.clients.AuthUserDbClient;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;
@@ -79,6 +80,20 @@ class UserExtensionTest {
   }
 
   @Test
+  @DisplayName("close() удаляет пригласившего, упавшего до создания приглашённых, и несозданных приглашённых не трогает")
+  void closeShouldDeleteInviterCreatedBeforeFailureInsideOutcomeInvitationsChain() {
+    UserFixture fixture = new UserWithOutcomeInvitationsFixture(new FailingFixture(new SingleUserFixture(TestUser.unique())), 1);
+    assertEquals(List.of(), leftovers(fixture), "После падения create() до приглашённых в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("close() удаляет пригласившего и всех приглашённых после падения в самом конце create()")
+  void closeShouldDeleteInviterAndInviteesAfterFailureAtEndOfChain() {
+    UserFixture fixture = new FailingFixture(new UserWithOutcomeInvitationsFixture(new SingleUserFixture(TestUser.unique()), 2));
+    assertEquals(List.of(), leftovers(fixture), "После падения create() после приглашений в БД остались пользователи");
+  }
+
+  @Test
   @DisplayName("Два параметра @User получают разных пользователей")
   void twoUserParametersShouldGetDifferentUsers() {
     Map<String, String> entry = entry(TwoUsers.class);
@@ -106,6 +121,26 @@ class UserExtensionTest {
         usernames(entry.get("incomeInvitations"))
     ).flatMap(List::stream).toList();
     assertEquals(List.of(), existing(created), "Не все пользователи, созданные для @User, удалены после теста");
+  }
+
+  @Test
+  @DisplayName("Пользователь из @User(outcomeInvitations) несёт приглашённых")
+  void userShouldCarryOutcomeInvitations() {
+    assertEquals(
+        3,
+        usernames(entry(UserWithOutcomeInvitations.class).get("outcomeInvitations")).size(),
+        "У пользователя не 3 исходящих приглашения"
+    );
+  }
+
+  @Test
+  @DisplayName("Приглашённые из @User удаляются из обеих БД после теста")
+  void inviteesShouldBeDeletedAfterTest() {
+    Map<String, String> entry = entry(UserWithOutcomeInvitations.class);
+    List<String> created = Stream.of(List.of(entry.get("username")), usernames(entry.get("outcomeInvitations")))
+        .flatMap(List::stream)
+        .toList();
+    assertEquals(List.of(), existing(created), "Не все пользователи, созданные для @User(outcomeInvitations), удалены после теста");
   }
 
   @Test
@@ -158,7 +193,7 @@ class UserExtensionTest {
     }
     TestUser user = fixture.user();
     return existing(
-        Stream.of(List.of(user), user.friends(), user.incomeInvitations())
+        Stream.of(List.of(user), user.friends(), user.incomeInvitations(), user.outcomeInvitations())
             .flatMap(List::stream)
             .map(TestUser::username)
             .toList()
@@ -252,6 +287,18 @@ class UserExtensionTest {
           "username", user.username(),
           "friends", joined(user.friends()),
           "incomeInvitations", joined(user.incomeInvitations())
+      ));
+    }
+  }
+
+  @ProbeTarget
+  static class UserWithOutcomeInvitations {
+
+    @Test
+    void test(@User(outcomeInvitations = 3) TestUser user, TestReporter reporter) {
+      reporter.publishEntry(Map.of(
+          "username", user.username(),
+          "outcomeInvitations", joined(user.outcomeInvitations())
       ));
     }
   }
