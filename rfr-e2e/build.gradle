@@ -50,9 +50,7 @@ allure {
 
 test {
     useJUnitPlatform()
-    project.properties.findAll { it.key.startsWith('rfr.') }.each { name, value ->
-        systemProperty name, value
-    }
+    systemProperties providers.gradlePropertiesPrefixedBy('rfr.').get()
     jvmArgumentProviders.add({ ["-javaagent:${configurations.agent.singleFile}"] } as CommandLineArgumentProvider)
     outputs.upToDateWhen { false }
 }
