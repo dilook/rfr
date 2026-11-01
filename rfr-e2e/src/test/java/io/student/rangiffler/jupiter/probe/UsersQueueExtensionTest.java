@@ -45,6 +45,40 @@ class UsersQueueExtensionTest {
     assertTrue(poolIsFull(), "Пользователь упавшего теста не вернулся в очередь");
   }
 
+  @Test
+  @DisplayName("При пустой очереди create() падает по таймауту с понятной ошибкой")
+  void createShouldFailWithClearErrorOnEmptyQueue() {
+    assertTrue(
+        emptyQueueError().startsWith("Очередь статических пользователей пуста"),
+        "При пустой очереди create() не упал с ошибкой о пустой очереди"
+    );
+  }
+
+  @Test
+  @DisplayName("Повторный close() не возвращает пользователя в очередь дважды")
+  void secondCloseShouldNotReturnUserTwice() {
+    UserFixture fixture = new StaticUserFixture();
+    fixture.create();
+    fixture.close();
+    fixture.close();
+    assertTrue(
+        emptyQueueError().startsWith("Очередь статических пользователей пуста"),
+        "После повторного close() в очереди больше трёх пользователей"
+    );
+  }
+
+  private static String emptyQueueError() {
+    List<UserFixture> pool = Stream.<UserFixture>generate(StaticUserFixture::new).limit(4).toList();
+    try {
+      pool.forEach(UserFixture::create);
+      return "Из пула трёх пользователей взято четыре";
+    } catch (IllegalStateException e) {
+      return e.getMessage();
+    } finally {
+      pool.forEach(UserFixture::close);
+    }
+  }
+
   private static boolean poolIsFull() {
     List<UserFixture> pool = Stream.<UserFixture>generate(StaticUserFixture::new).limit(3).toList();
     try {
