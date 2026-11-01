@@ -13,26 +13,27 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 @UsePlaywright(PlaywrightOptions.class)
-public class PeopleTest {
+public class FriendsTabTest {
 
   @Test
-  @DisplayName("Друзья и входящие приглашения из @User видны на странице People")
-  void friendsAndIncomeInvitationsShouldBeCreated(@User(friends = 2, incomeInvitations = 1) TestUser user, Page page) {
+  @DisplayName("Вкладка Friends показывает только друзей, без входящих приглашений")
+  void friendsTabShouldListOnlyFriends(@User(friends = 1, incomeInvitations = 1) TestUser user, Page page) {
     openPeople(user, page)
-        .checkThatPeopleAre(usernames(user.friends()))
-        .clickIncomeInvitationsTab()
-        .checkThatPeopleAre(usernames(user.incomeInvitations()));
+        .checkThatPeopleAre(usernames(user.friends()));
   }
 
   @Test
-  @DisplayName("Приглашение в друзья, отправленное через UI, видно в исходящих приглашениях")
-  void invitationSentFromBrowserShouldBeListedInOutcomeInvitations(@User TestUser user, @User TestUser friend, Page page) {
+  @DisplayName("У друга на вкладке Friends есть кнопка Remove")
+  void friendShouldHaveRemoveButton(@User(friends = 1) TestUser user, Page page) {
     openPeople(user, page)
-        .clickAllPeopleTab()
-        .searchPeople(friend.username())
-        .clickAdd(friend.username())
-        .clickOutcomeInvitationsTab()
-        .checkThatPersonIsListed(friend.username());
+        .checkThatFriendCanBeRemoved(user.friends().getFirst().username());
+  }
+
+  @Test
+  @DisplayName("Вкладка Friends пуста у пользователя без друзей")
+  void friendsTabShouldBeEmptyWithoutFriends(@User TestUser user, Page page) {
+    openPeople(user, page)
+        .checkThatNoPeopleAreListed();
   }
 
   private static PeoplePage openPeople(TestUser user, Page page) {

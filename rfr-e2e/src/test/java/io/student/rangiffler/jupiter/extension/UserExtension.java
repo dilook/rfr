@@ -23,7 +23,7 @@ public class UserExtension implements BeforeEachCallback, ParameterResolver {
       if (isUserParameter(parameters[i])) {
         User user = parameters[i].getAnnotation(User.class);
         if (user != null) {
-          UserFixture fixture = new UserRequest(user.friends(), user.incomeInvitations()).fixture();
+          UserFixture fixture = new UserRequest(user).fixture();
           context.getStore(NAMESPACE).put(i, fixture);
           fixture.create();
         }

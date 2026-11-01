@@ -7,13 +7,20 @@
  
 Используйте навык `rfr-page-objects` (`.claude/skills/rfr-page-objects/SKILL.md`) для создания Page Objects.
 
+## Тестовые данные
+
+Используйте навык `rfr-test-data` (`.claude/skills/rfr-test-data/SKILL.md`) для пользователей, связей, новых предусловий `@User` и SQL-клиентов; ревью таких изменений — навык `rfr-test-review` или агент `test-reviewer`.
+
 ## Архитектура проекта
 
 - Структура пакетов — `rfr-e2e/README.md`, раздел «Архитектура»: `config`, `jupiter`, `data`, `utils`, `ui`, `test`. Новые классы кладутся в существующие пакеты.
-- Готовый пользователь — параметр `@User TestUser user` (аннотация в `jupiter/annotation` сама подключает `jupiter/extension/UserExtension`). 
+- Готовый пользователь — параметр `@User TestUser user` (аннотация в `jupiter/annotation` сама подключает `jupiter/extension/UserExtension`); связи — атрибуты `friends`, `incomeInvitations`, `outcomeInvitations`, связанные пользователи — в одноимённых списках `TestUser`.
+- Пользователь из пула заранее заведённых — параметр `@StaticUser TestUser user` (`UsersQueueExtension`, `StaticUserFixture`): берётся из общей очереди с таймаутом и возвращается в неё после теста; в БД ничего не создаётся и не удаляется.
 - `UserExtension` кладёт `UserFixture` в `ExtensionContext.Store` до `create()`, и JUnit сам закрывает её после теста, даже упавшего или с ошибкой в `beforeEach`; `AfterEachCallback` не нужен.
 - Случайного пользователя даёт `TestUser.unique()`. Пользователя, которого регистрирует сам тест через UI, удаляют так: поле `TestUser user = TestUser.unique()` и `new SingleUserFixture(user).close()` в `@AfterEach`, без `create()` (см. `RegistrationTest`).
 
 ## Подводные камни
 
 - Успешный snackbar или обновлённая карточка на фронте не доказывают сохранение: Apollo обновляет кэш из ответа мутации. Проверяй независимым чтением.
+- Таблицы People показывают «There are no users yet» до прихода данных и при ошибке запроса: действие, открывающее вкладку, ждёт ответа своей операции (`GraphQlOperation`), а проверка пустой вкладки требует отсутствия `alert`.
+- Скрипт `.claude/hooks/compile.sh` читает JSON хука из stdin: вручную не запускать, компилировать через `./gradlew -q :rfr-e2e:compileTestJava`.
