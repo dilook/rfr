@@ -94,6 +94,41 @@ class UserExtensionTest {
   }
 
   @Test
+  @DisplayName("close() удаляет всех пользователей полной цепочки после падения в самом конце create()")
+  void closeShouldDeleteAllUsersAfterFailureAtEndOfFullChain() {
+    UserFixture fixture = new FailingFixture(new UserWithOutcomeInvitationsFixture(
+        new UserWithIncomeInvitationsFixture(new UserWithFriendsFixture(new SingleUserFixture(TestUser.unique()), 1), 1), 1
+    ));
+    assertEquals(List.of(), leftovers(fixture), "После падения create() в конце полной цепочки в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("close() удаляет созданных до падения между входящими и исходящими приглашениями и несозданных приглашённых не трогает")
+  void closeShouldDeleteUsersCreatedBeforeFailureBetweenIncomeAndOutcomeInvitations() {
+    UserFixture fixture = new UserWithOutcomeInvitationsFixture(new FailingFixture(
+        new UserWithIncomeInvitationsFixture(new UserWithFriendsFixture(new SingleUserFixture(TestUser.unique()), 1), 1)
+    ), 1);
+    assertEquals(List.of(), leftovers(fixture), "После падения create() между входящими и исходящими приглашениями в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("Пользователь из @User(friends, incomeInvitations, outcomeInvitations) и все связанные удаляются из обеих БД после теста")
+  void userWithAllRelationsShouldBeDeletedAfterTest() {
+    Map<String, String> entry = entry(UserWithAllRelations.class);
+    List<String> created = Stream.of(
+        List.of(entry.get("username")),
+        values(entry.get("friends")),
+        values(entry.get("incomeInvitations")),
+        values(entry.get("outcomeInvitations"))
+    ).flatMap(List::stream).toList();
+    assertEquals(
+        List.of(4, List.of()),
+        List.of(created.size(), existing(created)),
+        "После теста со всеми тремя связями создано не 4 пользователя или не все удалены"
+    );
+  }
+
+  @Test
   @DisplayName("Два параметра @User получают разных пользователей")
   void twoUserParametersShouldGetDifferentUsers() {
     Map<String, String> entry = entry(TwoUsers.class);
@@ -333,6 +368,20 @@ class UserExtensionTest {
     void test(@User(outcomeInvitations = 3) TestUser user, TestReporter reporter) {
       reporter.publishEntry(Map.of(
           "username", user.username(),
+          "outcomeInvitations", joined(user.outcomeInvitations())
+      ));
+    }
+  }
+
+  @ProbeTarget
+  static class UserWithAllRelations {
+
+    @Test
+    void test(@User(friends = 1, incomeInvitations = 1, outcomeInvitations = 1) TestUser user, TestReporter reporter) {
+      reporter.publishEntry(Map.of(
+          "username", user.username(),
+          "friends", joined(user.friends()),
+          "incomeInvitations", joined(user.incomeInvitations()),
           "outcomeInvitations", joined(user.outcomeInvitations())
       ));
     }
