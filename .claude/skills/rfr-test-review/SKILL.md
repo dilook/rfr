@@ -17,7 +17,7 @@ description: Ревью тестового кода rfr-e2e на владени�
 6. **Браузером владеет `@UsePlaywright`.** `Page` и `BrowserContext` не создаются и не закрываются в тестах и extension'ах.
 7. **Слои.** В `jupiter` нет SQL и локаторов; в `data` нет JUnit, SQL только в `data/clients`, и клиенты не зависят от `data`; в `test` нет локаторов и SQL.
 8. **Вывод подтверждён.** Каждый вывод подтверждён пробой в `jupiter/probe/UserExtensionTest` (EngineTestKit, `userExists()` из `data/clients`, цели `CreatedUser` и `FailedUser`, декоратор `FailingFixture`), для пула — в `jupiter/probe/UsersQueueExtensionTest`, или конкретной строкой кода; без найденной причины изменений не предлагай.
-9. **Пул @StaticUser — единственный общий ресурс, который владеет пользователями.** На время теста — StaticUserFixture в Store UsersQueueExtension (put до create()). create() ждёт с таймаутом, а close() возвращает только взятого пользователя и БД не трогает. Пробы с пулом идут в SAME_THREAD, состояние после цели проверяет сама проба через StaticUserFixture, а возврат пользователя подтверждается прогоном с пустым close().
+9. **Пул `@StaticUser` — единственный общий ресурс, который владеет пользователями.** Между тестами пользователем владеет статическая очередь `StaticUserFixture`, на время теста — `StaticUserFixture` в Store `UsersQueueExtension` (`put` до `create()`). `create()` ждёт с таймаутом, а `close()` возвращает только взятого пользователя и БД не трогает. Пробы с пулом идут в `SAME_THREAD`, состояние после цели проверяет сама проба через `StaticUserFixture`, а возврат пользователя подтверждается прогоном с пустым `close()`.
 
 ## Формат ответа
 
