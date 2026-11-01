@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 @UsePlaywright(PlaywrightOptions.class)
-public class PeopleTest {
+public class FriendshipPreconditionTest {
 
   @Test
   @DisplayName("Друзья и входящие приглашения из @User видны на странице People")
