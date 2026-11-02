@@ -13,6 +13,7 @@ def playwrightVersion = '1.63.0'
 def springVersion = '7.0.9'
 def springSecurityVersion = '7.1.1'
 def mysqlDriverVersion = '9.7.0'
+def flywayVersion = '12.4.0'
 
 configurations {
     agent {
@@ -32,7 +33,9 @@ dependencies {
     testImplementation "com.microsoft.playwright:playwright:$playwrightVersion"
     testImplementation "org.springframework:spring-jdbc:$springVersion"
     testImplementation "org.springframework.security:spring-security-crypto:$springSecurityVersion"
+    testImplementation "org.flywaydb:flyway-core:$flywayVersion"
     testRuntimeOnly "com.mysql:mysql-connector-j:$mysqlDriverVersion"
+    testRuntimeOnly "org.flywaydb:flyway-mysql:$flywayVersion"
 
     testImplementation "org.junit.jupiter:junit-jupiter"
     testImplementation "org.junit.platform:junit-platform-testkit"

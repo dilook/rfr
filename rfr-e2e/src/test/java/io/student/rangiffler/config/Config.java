@@ -34,6 +34,14 @@ public final class Config {
     return get("api.jdbc.url", "jdbc:mysql://localhost:3306/rangiffler-api?serverTimezone=UTC");
   }
 
+  public static String authMigrations() {
+    return get("auth.migrations", "filesystem:../rfr-auth/src/main/resources/db/migration/rangiffler-auth");
+  }
+
+  public static String apiMigrations() {
+    return get("api.migrations", "filesystem:../rfr-api/src/main/resources/db/migration/rangiffler-api");
+  }
+
   public static String dbUsername() {
     return get("db.username", "root");
   }

@@ -30,6 +30,8 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 | `rfr.api.url` | `http://localhost:8081` |
 | `rfr.auth.jdbc.url` | `jdbc:mysql://localhost:3306/rangiffler-auth?serverTimezone=UTC` |
 | `rfr.api.jdbc.url` | `jdbc:mysql://localhost:3306/rangiffler-api?serverTimezone=UTC` |
+| `rfr.auth.migrations` | `filesystem:../rfr-auth/src/main/resources/db/migration/rangiffler-auth` |
+| `rfr.api.migrations` | `filesystem:../rfr-api/src/main/resources/db/migration/rangiffler-api` |
 | `rfr.db.username` / `rfr.db.password` | `root` / `secret` |
 | `rfr.headless` | `true` |
 

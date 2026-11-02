@@ -172,6 +172,8 @@ class SuiteExtensionTest {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(Arrays.stream(samples).map(DiscoverySelectors::selectClass).toList())
         .configurationParameter(ProbeTargetCondition.ENABLED, "true")
+        // Глобальные SuiteExtension проекта, вроде MigrationsExtension, сделали бы пробу зависимой от локальной БД.
+        .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
         .configurationParameter("junit.jupiter.execution.parallel.enabled", "true")
         .configurationParameter("junit.jupiter.execution.parallel.mode.default", "concurrent")
         .configurationParameter("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
