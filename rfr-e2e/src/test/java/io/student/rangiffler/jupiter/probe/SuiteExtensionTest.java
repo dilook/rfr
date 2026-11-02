@@ -172,7 +172,7 @@ class SuiteExtensionTest {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(Arrays.stream(samples).map(DiscoverySelectors::selectClass).toList())
         .configurationParameter(ProbeTargetCondition.ENABLED, "true")
-        // Глобальные SuiteExtension проекта, вроде StandSchemaExtension, сделали бы пробу зависимой от локальной БД.
+        // Автоопределение подключило бы к образцам extension'ы из ServiceLoader (AllureJupiter, StandSchemaExtension).
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
         .configurationParameter("junit.jupiter.execution.parallel.enabled", "true")
         .configurationParameter("junit.jupiter.execution.parallel.mode.default", "concurrent")
@@ -188,13 +188,14 @@ class SuiteExtensionTest {
 
     @Override
     public void beforeSuite(ExtensionContext context) {
-      JOURNAL.add("before:JournalSuite");
       try {
         Thread.sleep(200);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new IllegalStateException("Ожидание в beforeSuite образца JournalSuite прервано", e);
       }
+      // Запись после паузы: если классы не ждут окончания beforeSuite, первой в журнале окажется запись теста.
+      JOURNAL.add("before:JournalSuite");
     }
 
     @Override
