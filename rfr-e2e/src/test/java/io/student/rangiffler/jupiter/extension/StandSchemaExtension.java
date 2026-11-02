@@ -11,18 +11,18 @@ import java.util.Optional;
  * Перед всем прогоном сверяет схемы локальной MySQL с миграциями бэкендов текущей ветки: после переключения веток
  * без пересоздания БД код бэкендов и схема расходятся, и тесты падают на непонятных ошибках вместо одной понятной.
  */
-public final class MigrationsExtension implements SuiteExtension {
+public final class StandSchemaExtension implements SuiteExtension {
 
   private final List<MigrationDbClient> schemas;
 
-  public MigrationsExtension() {
+  public StandSchemaExtension() {
     this(List.of(
         new MigrationDbClient(Config.authJdbcUrl(), "rangiffler-auth", Config.authMigrations()),
         new MigrationDbClient(Config.apiJdbcUrl(), "rangiffler-api", Config.apiMigrations())
     ));
   }
 
-  public MigrationsExtension(List<MigrationDbClient> schemas) {
+  public StandSchemaExtension(List<MigrationDbClient> schemas) {
     this.schemas = schemas;
   }
 
