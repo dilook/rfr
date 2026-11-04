@@ -1,17 +1,21 @@
 package io.student.rangiffler.data.clients;
 
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.CoreErrorCode;
+import org.flywaydb.core.api.FlywayException;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.output.ValidateResult;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 /**
  * Сверяет историю Flyway одной схемы локальной MySQL с миграциями бэкенда из текущего checkout'а, ничего не меняя
- * в БД, и описывает расхождение вместе с командой, которая его устраняет.
+ * в БД, описывает расхождение вместе с командой, которая его устраняет, и называет текущую версию схемы.
  */
 public class MigrationDbClient {
 
@@ -29,8 +33,10 @@ public class MigrationDbClient {
     this.schema = schema;
     this.location = location;
     // Без пустого ignoreMigrationPatterns Flyway по умолчанию молча пропускает миграции из БД, которых нет в ветке.
+    // Без таймаутов драйвер ждёт без срока базу, которая приняла соединение и молчит, и вешает afterSuite отчёта.
     this.flyway = Flyway.configure()
-        .dataSource(jdbcUrl, Config.dbUsername(), Config.dbPassword())
+        .dataSource(jdbcUrl, TestConfig.dbUsername(), TestConfig.dbPassword())
+        .jdbcProperties(Map.of("connectTimeout", "5000", "socketTimeout", "5000"))
         .schemas(schema)
         .locations(location)
         .ignoreMigrationPatterns(new String[0])
@@ -51,6 +57,17 @@ public class MigrationDbClient {
     );
   }
 
+  public String version() {
+    try {
+      return Optional.ofNullable(flyway.info().current())
+          .map(MigrationInfo::getVersion)
+          .map(MigrationVersion::getVersion)
+          .orElse("none");
+    } catch (FlywayException e) {
+      return "unavailable";
+    }
+  }
+
   private static boolean pending(ValidateResult result) {
     return !result.invalidMigrations.isEmpty()
         && result.invalidMigrations.stream().allMatch(output -> PENDING.contains(output.errorDetails.errorCode));
@@ -62,7 +79,7 @@ public class MigrationDbClient {
 
   private String recreation() {
     return "Удалите схему и перезапустите бэкенды на текущей ветке, Flyway создаст её заново (данные схемы будут потеряны): "
-        + "docker exec rfr-mysql mysql -u" + Config.dbUsername() + " -p" + Config.dbPassword()
+        + "docker exec rfr-mysql mysql -u" + TestConfig.dbUsername() + " -p" + TestConfig.dbPassword()
         + " -e 'DROP DATABASE `" + schema + "`' && bash ports.sh && ./gradlew runAll";
   }
 }

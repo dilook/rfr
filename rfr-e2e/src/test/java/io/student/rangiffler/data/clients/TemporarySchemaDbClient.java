@@ -1,6 +1,6 @@
 package io.student.rangiffler.data.clients;
 
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import org.flywaydb.core.Flyway;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class TemporarySchemaDbClient implements AutoCloseable {
     this.dir = dir;
     // URL без имени базы: clean() включён, и соединение не должно указывать на настоящую схему rangiffler-*.
     this.flyway = Flyway.configure()
-        .dataSource(Config.dbJdbcUrl(), Config.dbUsername(), Config.dbPassword())
+        .dataSource(TestConfig.dbJdbcUrl(), TestConfig.dbUsername(), TestConfig.dbPassword())
         .schemas(schema)
         .createSchemas(true)
         .cleanDisabled(false)
@@ -64,7 +64,7 @@ public class TemporarySchemaDbClient implements AutoCloseable {
   }
 
   public MigrationDbClient migrations() {
-    return new MigrationDbClient(Config.dbJdbcUrl(), schema, "filesystem:" + dir);
+    return new MigrationDbClient(TestConfig.dbJdbcUrl(), schema, "filesystem:" + dir);
   }
 
   @Override

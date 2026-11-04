@@ -4,13 +4,13 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 public final class WelcomePage {
 
-  public static final String URL = Config.frontUrl() + "/";
+  public static final String URL = TestConfig.frontUrl() + "/";
 
   private final Page page;
   private final Locator loginButton;

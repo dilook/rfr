@@ -5,7 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -17,7 +17,7 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 
 public final class ProfilePage {
 
-  public static final String URL = Config.frontUrl() + "/profile";
+  public static final String URL = TestConfig.frontUrl() + "/profile";
 
   private final Page page;
   private final Locator firstNameInput;
@@ -146,7 +146,7 @@ public final class ProfilePage {
 
   private static boolean isUpdateUserResponse(Response response) {
     String body = response.request().postData();
-    return response.url().equals(Config.apiUrl() + "/graphql")
+    return response.url().equals(TestConfig.apiUrl() + "/graphql")
         && body != null
         && body.contains("\"operationName\":\"UpdateUser\"");
   }

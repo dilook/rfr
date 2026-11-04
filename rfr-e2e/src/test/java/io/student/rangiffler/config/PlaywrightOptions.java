@@ -10,8 +10,8 @@ public class PlaywrightOptions implements OptionsFactory {
   public Options getOptions() {
     return new Options()
         .setBrowserName("chromium")
-        .setHeadless(Config.headless())
-        .setBaseUrl(Config.frontUrl())
+        .setHeadless(TestConfig.headless())
+        .setBaseUrl(TestConfig.frontUrl())
         .setContextOptions(new Browser.NewContextOptions().setLocale("en-US"));
   }
 }

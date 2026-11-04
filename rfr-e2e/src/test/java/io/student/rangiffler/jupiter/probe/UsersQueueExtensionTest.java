@@ -95,7 +95,7 @@ class UsersQueueExtensionTest {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(DiscoverySelectors.selectClass(sample))
         .configurationParameter(ProbeTargetCondition.ENABLED, "true")
-        // Автоопределение подключило бы к образцам extension'ы из ServiceLoader (AllureJupiter, StandSchemaExtension).
+        // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
         .execute();
   }

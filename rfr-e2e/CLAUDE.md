@@ -1,7 +1,7 @@
 ## Конфигурация
 
-- UI-тесты на Playwright Java: классы помечаются `@UsePlaywright(PlaywrightOptions.class)`, `Page` приходит параметром теста.
-- Настройки — `config/Config`:system property `rfr.<key>` → env `RFR_<KEY>` → default; из Gradle — `-Prfr.<key>=…`. Подробности — `rfr-e2e/README.md`.
+- UI-тесты на Playwright Java: классы помечаются `@Tag("ui")` и `@UsePlaywright(PlaywrightOptions.class)`, `Page` приходит параметром теста. Таска `e2e` запускает только классы с тегом `ui`: без него UI-тест в `e2e` не попадёт.
+- Настройки — `config/TestConfig`:system property `rfr.<key>` → env `RFR_<KEY>` → default; из Gradle — `-Prfr.<key>=…`. Подробности — `rfr-e2e/README.md`.
 
 ## Создание Page Objects
  
