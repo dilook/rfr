@@ -6,7 +6,7 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 
 ```bash
 ./gradlew :rfr-e2e:installPlaywright                      # один раз: браузер Chromium
-./gradlew e2e                                             # все тесты со сверкой схем БД, прогоняются при каждом вызове
+./gradlew e2e                                             # UI-тесты с тегом ui, со сверкой схем БД, при каждом вызове
 ./gradlew e2e -Prfr.headless=false                        # с видимым браузером
 ./gradlew :rfr-e2e:test --tests '*RegistrationTest'       # один класс, без сверки схем БД
 ./gradlew :rfr-e2e:test --tests '*.jupiter.probe.*'       # тесты расширений, нужна только MySQL
@@ -25,8 +25,9 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 ответа, или база, отвечающая по байту, могут задержать проверку за срок. Если время вышло, тесты не запускаются, а
 ошибка называет молчащие сервисы и команду, которая их поднимает. IDE запускает тесты через `e2e --tests …`, поэтому
 UI-тест из IDE при выключенном фронте падает с этой ошибкой, а не по таймауту Playwright; чтобы узнать об этом быстрее
-180 с, добавьте `-Prfr.standTimeout=10` в Gradle-конфигурацию запуска IDE. Таска `:rfr-e2e:test` и `./gradlew build`
-стенд не ждут.
+180 с, добавьте `-Prfr.standTimeout=10` в Gradle-конфигурацию запуска IDE. Таска `e2e` запускает только классы с тегом
+`ui`; у проб `jupiter/probe` этого тега нет, поэтому и из IDE их запускают через `:rfr-e2e:test`, а не через `e2e`.
+Таска `:rfr-e2e:test` и `./gradlew build` стенд не ждут.
 
 Затем `StandSchemaExtension` сверяет схемы `rangiffler-auth` и `rangiffler-api` локальной MySQL с
 Flyway-миграциями бэкендов текущего checkout'а и при расхождении не запускает тесты, а печатает команду, которая его
