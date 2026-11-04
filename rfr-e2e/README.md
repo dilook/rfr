@@ -34,6 +34,13 @@ Flyway-миграциями бэкендов текущего checkout'а и п�
 Таска `:rfr-e2e:test` и `./gradlew build` эту сверку пропускают. Порядок проверок задают строки
 `src/test/resources/META-INF/services/org.junit.jupiter.api.extension.Extension`: сверке схем нужна поднятая MySQL.
 
+После любого прогона `AllureEnvironmentExtension` пишет `environment.properties` в каталог результатов Allure
+(`allure.results.directory`, по умолчанию `rfr-e2e/build/allure-results`): `frontUrl`, `authUrl`, `apiUrl`, `browser` и
+`headless` из `PlaywrightOptions`, `commit` и `authSchemaVersion`/`apiSchemaVersion` — текущие версии Flyway схем, или
+`unavailable`, если MySQL недоступна. Короткий хеш коммита передаёт Gradle свойством `rfr.commit` (`git rev-parse --short
+HEAD`), сам тест git не запускает. Файл пишется и после упавшей проверки стенда: JUnit не вызывает `beforeAll`
+extension'ов, стоящих после упавшего, поэтому `AllureEnvironmentExtension` стоит в файле сервисов первой.
+
 ## Конфигурация
 
 `TestConfig` ищет значение по порядку: system property `rfr.<ключ>` → переменная окружения `RFR_<КЛЮЧ>` (точки заменяются
@@ -51,6 +58,7 @@ Flyway-миграциями бэкендов текущего checkout'а и п�
 | `rfr.standCheck` | `false`; таска `e2e` выставляет `true` |
 | `rfr.standTimeout` | `180` — секунд на ожидание стенда |
 | `rfr.stand.schema.check` | `false`; таска `e2e` выставляет `true` |
+| `rfr.commit` | `unknown`; Gradle выставляет короткий хеш `HEAD` |
 | `rfr.auth.migrations` | `filesystem:../rfr-auth/src/main/resources/db/migration/rangiffler-auth` |
 | `rfr.api.migrations` | `filesystem:../rfr-api/src/main/resources/db/migration/rangiffler-api` |
 | `rfr.db.username` / `rfr.db.password` | `root` / `secret` |
@@ -65,7 +73,7 @@ Flyway-миграциями бэкендов текущего checkout'а и п�
 | Пакет | Что лежит |
 |---|---|
 | `config` | `TestConfig` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
-| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `StandReadinessExtension` — ожидание стенда, и `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, обе подключены через ServiceLoader именно в этом порядке), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest`, `StandReadinessExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
+| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `AllureEnvironmentExtension` — окружение прогона в отчёте Allure, `StandReadinessExtension` — ожидание стенда и `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, все подключены через ServiceLoader именно в этом порядке), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest`, `StandReadinessExtensionTest`, `AllureEnvironmentExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
 | `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient`, `MigrationDbClient` — Flyway validate одной схемы и команда исправления расхождения, `TemporarySchemaDbClient` — временная схема с каталогом миграций для проб; `StandService` — готовность одного сервиса стенда: `JdbcStandService` (JDBC-подключение выполняет `SELECT 1`), `HttpStandService` (подходящий HTTP-статус) |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |

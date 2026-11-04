@@ -71,6 +71,10 @@ public final class TestConfig {
     return Boolean.parseBoolean(get("headless", "true"));
   }
 
+  public static String commit() {
+    return get("commit", "unknown");
+  }
+
   private static String get(String key, String defaultValue) {
     String property = System.getProperty(PROPERTY_PREFIX + key);
     if (property != null && !property.isBlank()) {

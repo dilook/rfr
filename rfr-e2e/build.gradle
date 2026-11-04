@@ -51,10 +51,18 @@ allure {
     }
 }
 
+def commit = providers.gradleProperty('rfr.commit').orElse(
+    providers.exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        ignoreExitValue = true
+    }.standardOutput.asText.map { it.trim() ?: 'unknown' }
+)
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
     systemProperties providers.gradlePropertiesPrefixedBy('rfr.').get()
     jvmArgumentProviders.add({ ["-javaagent:${configurations.agent.singleFile}"] } as CommandLineArgumentProvider)
+    jvmArgumentProviders.add({ ["-Drfr.commit=${commit.get()}"] } as CommandLineArgumentProvider)
     outputs.upToDateWhen { false }
 }
 

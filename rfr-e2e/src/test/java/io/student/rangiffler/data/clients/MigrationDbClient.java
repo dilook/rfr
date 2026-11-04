@@ -4,6 +4,9 @@ import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.CoreErrorCode;
+import org.flywaydb.core.api.FlywayException;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.output.ValidateResult;
 
 import java.util.Optional;
@@ -11,7 +14,7 @@ import java.util.Set;
 
 /**
  * Сверяет историю Flyway одной схемы локальной MySQL с миграциями бэкенда из текущего checkout'а, ничего не меняя
- * в БД, и описывает расхождение вместе с командой, которая его устраняет.
+ * в БД, описывает расхождение вместе с командой, которая его устраняет, и называет текущую версию схемы.
  */
 public class MigrationDbClient {
 
@@ -49,6 +52,17 @@ public class MigrationDbClient {
             + result.getAllErrorMessages() + "\n"
             + (pending(result) ? restart() : recreation())
     );
+  }
+
+  public String version() {
+    try {
+      return Optional.ofNullable(flyway.info().current())
+          .map(MigrationInfo::getVersion)
+          .map(MigrationVersion::getVersion)
+          .orElse("none");
+    } catch (FlywayException e) {
+      return "unavailable";
+    }
   }
 
   private static boolean pending(ValidateResult result) {
