@@ -38,7 +38,6 @@ dependencies {
     testRuntimeOnly "org.flywaydb:flyway-mysql:$flywayVersion"
 
     testImplementation "org.junit.jupiter:junit-jupiter"
-    testImplementation "org.junit.platform:junit-platform-suite"
     testImplementation "org.junit.platform:junit-platform-testkit"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     testRuntimeOnly "org.aspectj:aspectjrt:$aspectJVersion"
@@ -65,7 +64,6 @@ tasks.register('e2e', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     systemProperty 'rfr.stand.schema.check', 'true'
-    include '**/SuiteDemo.class'
 }
 
 tasks.register('installPlaywright', JavaExec) {
