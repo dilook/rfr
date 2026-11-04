@@ -1,6 +1,6 @@
 package io.student.rangiffler.jupiter.extension;
 
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.data.clients.MigrationDbClient;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -19,10 +19,10 @@ public final class StandSchemaExtension implements SuiteExtension {
 
   public StandSchemaExtension() {
     this(
-        Config.standSchemaCheck(),
+        TestConfig.standSchemaCheck(),
         List.of(
-            new MigrationDbClient(Config.authJdbcUrl(), "rangiffler-auth", Config.authMigrations()),
-            new MigrationDbClient(Config.apiJdbcUrl(), "rangiffler-api", Config.apiMigrations())
+            new MigrationDbClient(TestConfig.authJdbcUrl(), "rangiffler-auth", TestConfig.authMigrations()),
+            new MigrationDbClient(TestConfig.apiJdbcUrl(), "rangiffler-api", TestConfig.apiMigrations())
         )
     );
   }

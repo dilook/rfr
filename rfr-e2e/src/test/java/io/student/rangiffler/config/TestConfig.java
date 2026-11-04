@@ -6,12 +6,12 @@ import java.util.Locale;
  * Значение ищется по порядку: system property {@code rfr.<key>}, переменная окружения {@code RFR_<KEY>}, default.
  * Например, {@code front.url} → {@code -Drfr.front.url} / {@code RFR_FRONT_URL}.
  */
-public final class Config {
+public final class TestConfig {
 
   private static final String PROPERTY_PREFIX = "rfr.";
   private static final String ENV_PREFIX = "RFR_";
 
-  private Config() {
+  private TestConfig() {
   }
 
   public static String frontUrl() {

@@ -1,7 +1,7 @@
 package io.student.rangiffler.data.clients;
 
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.CoreErrorCode;
 import org.flywaydb.core.api.output.ValidateResult;
@@ -30,7 +30,7 @@ public class MigrationDbClient {
     this.location = location;
     // Без пустого ignoreMigrationPatterns Flyway по умолчанию молча пропускает миграции из БД, которых нет в ветке.
     this.flyway = Flyway.configure()
-        .dataSource(jdbcUrl, Config.dbUsername(), Config.dbPassword())
+        .dataSource(jdbcUrl, TestConfig.dbUsername(), TestConfig.dbPassword())
         .schemas(schema)
         .locations(location)
         .ignoreMigrationPatterns(new String[0])
@@ -62,7 +62,7 @@ public class MigrationDbClient {
 
   private String recreation() {
     return "Удалите схему и перезапустите бэкенды на текущей ветке, Flyway создаст её заново (данные схемы будут потеряны): "
-        + "docker exec rfr-mysql mysql -u" + Config.dbUsername() + " -p" + Config.dbPassword()
+        + "docker exec rfr-mysql mysql -u" + TestConfig.dbUsername() + " -p" + TestConfig.dbPassword()
         + " -e 'DROP DATABASE `" + schema + "`' && bash ports.sh && ./gradlew runAll";
   }
 }

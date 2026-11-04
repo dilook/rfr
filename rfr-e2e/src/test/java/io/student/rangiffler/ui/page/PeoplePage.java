@@ -4,7 +4,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.ui.component.GraphQlOperation;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 
 public final class PeoplePage {
 
-  public static final String URL = Config.frontUrl() + "/people";
+  public static final String URL = TestConfig.frontUrl() + "/people";
 
   private final Page page;
   private final Locator friendsTab;

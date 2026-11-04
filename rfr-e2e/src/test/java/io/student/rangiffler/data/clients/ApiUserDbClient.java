@@ -1,7 +1,7 @@
 package io.student.rangiffler.data.clients;
 
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.JdbcTransactionManager;
@@ -16,7 +16,7 @@ public class ApiUserDbClient {
 
   public ApiUserDbClient() {
     DriverManagerDataSource dataSource = new DriverManagerDataSource(
-        Config.apiJdbcUrl(), Config.dbUsername(), Config.dbPassword()
+        TestConfig.apiJdbcUrl(), TestConfig.dbUsername(), TestConfig.dbPassword()
     );
     this.jdbcTemplate = new JdbcTemplate(dataSource);
     this.transactionTemplate = new TransactionTemplate(new JdbcTransactionManager(dataSource));

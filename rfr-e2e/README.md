@@ -24,7 +24,7 @@ Flyway-миграциями бэкендов текущего checkout'а и п�
 
 ## Конфигурация
 
-`Config` ищет значение по порядку: system property `rfr.<ключ>` → переменная окружения `RFR_<КЛЮЧ>` (точки заменяются
+`TestConfig` ищет значение по порядку: system property `rfr.<ключ>` → переменная окружения `RFR_<КЛЮЧ>` (точки заменяются
 на `_`, например `RFR_FRONT_URL`) → значение по умолчанию. Из Gradle ключ передается как `-Prfr.<ключ>=…`: задача `test`
 пробрасывает все свойства проекта `rfr.*` в тестовую JVM.
 
@@ -50,7 +50,7 @@ Flyway-миграциями бэкендов текущего checkout'а и п�
 
 | Пакет | Что лежит |
 |---|---|
-| `config` | `Config` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
+| `config` | `TestConfig` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
 | `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, подключена через ServiceLoader), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
 | `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient`, `MigrationDbClient` — Flyway validate одной схемы и команда исправления расхождения, `TemporarySchemaDbClient` — временная схема с каталогом миграций для проб |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
