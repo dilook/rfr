@@ -8,12 +8,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Properties;
 
 /**
  * База стенда, готовая, когда на её JDBC-подключении выполняется SELECT 1: открытый порт ещё не значит, что MySQL
- * принимает логин и запросы. Подключение и чтение ответа ограничены таймаутом драйвера, а отказ в доступе не ждёт
- * таймаута стенда, потому что неверные учётные данные со временем не исправятся.
+ * принимает логин и запросы. Подключение и каждое чтение ответа ограничены таймаутами драйвера, но не дольше остатка
+ * до срока ожидания стенда; драйвер считает таймаут на каждое чтение, а не на попытку, поэтому база, отвечающая по
+ * байту, может растянуть попытку за срок. Отказ в доступе не ждёт срока, потому что неверные учётные данные со временем
+ * не исправятся.
  */
 public final class JdbcStandService implements StandService {
 
@@ -30,12 +33,16 @@ public final class JdbcStandService implements StandService {
   }
 
   @Override
-  public boolean ready() {
+  public boolean ready(Instant deadline) {
+    Duration budget = new Budget(timeout, deadline).duration();
+    if (budget.isZero()) {
+      return false;
+    }
     Properties properties = new Properties();
     properties.setProperty("user", TestConfig.dbUsername());
     properties.setProperty("password", TestConfig.dbPassword());
-    properties.setProperty("connectTimeout", String.valueOf(timeout.toMillis()));
-    properties.setProperty("socketTimeout", String.valueOf(timeout.toMillis()));
+    properties.setProperty("connectTimeout", String.valueOf(budget.toMillis()));
+    properties.setProperty("socketTimeout", String.valueOf(budget.toMillis()));
     try (
         Connection connection = DriverManager.getConnection(url, properties);
         Statement statement = connection.createStatement();

@@ -8,16 +8,19 @@ import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.function.IntPredicate;
 
 /**
- * Сервис стенда, готовый, когда на запрос пришёл ответ с подходящим статусом. Соединение и ответ ограничены таймаутом
- * самого запроса, поэтому запрос без таймаута отвергается, а не ждёт бесконечно. Как curl в scripts/wait-for-stand.sh,
- * запрос идёт по HTTP/1.1, потому что Vite зависает на апгрейде до HTTP/2, который Java просит по умолчанию. Сначала
- * запрос уходит по имени хоста, с исходными Host и TLS; только если он не прошёл, http-запрос повторяется на каждый
- * адрес хоста: Vite слушает localhost только по IPv6, а Java по умолчанию ходит на localhost по IPv4. Для https адрес
- * не подменяется, иначе сертификат не сойдётся с именем.
+ * Сервис стенда, готовый, когда на запрос пришёл ответ с подходящим статусом. Соединение и ожидание ответа каждой
+ * попытки ограничены таймаутом запроса, но не дольше остатка до срока ожидания стенда; запрос без таймаута отвергается.
+ * Чтение тела таймаут HttpClient не ограничивает, поэтому сервис, замолчавший на теле ответа, держит попытку за срок.
+ * Как curl в scripts/wait-for-stand.sh, запрос идёт по HTTP/1.1, потому что Vite зависает на апгрейде до HTTP/2,
+ * который Java просит по умолчанию. Сначала запрос уходит по имени хоста, с исходными Host и TLS; только если он не
+ * прошёл, http-запрос повторяется на каждый адрес хоста: Vite слушает localhost только по IPv6, а Java по умолчанию
+ * ходит на localhost по IPv4. Для https адрес не подменяется, иначе сертификат не сойдётся с именем.
  */
 public final class HttpStandService implements StandService {
 
@@ -34,21 +37,12 @@ public final class HttpStandService implements StandService {
   }
 
   @Override
-  public boolean ready() {
-    try (
-        HttpClient client = HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_1_1)
-            .connectTimeout(
-                request.timeout().orElseThrow(
-                    () -> new IllegalStateException("Запрос к сервису " + name + " без таймаута ждал бы бесконечно")
-                )
-            )
-            .build()
-    ) {
-      return answers(client, request)
+  public boolean ready(Instant deadline) {
+    try {
+      return answers(request, deadline)
           || "http".equalsIgnoreCase(request.uri().getScheme())
           && Arrays.stream(InetAddress.getAllByName(request.uri().getHost()))
-          .anyMatch(address -> answers(client, direct(address)));
+          .anyMatch(address -> answers(direct(address), deadline));
     } catch (UnknownHostException e) {
       return false;
     }
@@ -59,9 +53,23 @@ public final class HttpStandService implements StandService {
     return name + " (" + request.method() + " " + request.uri() + ") не ответил, поднять: " + command;
   }
 
-  private boolean answers(HttpClient client, HttpRequest attempt) {
-    try {
-      return accepted.test(client.send(attempt, HttpResponse.BodyHandlers.discarding()).statusCode());
+  private boolean answers(HttpRequest attempt, Instant deadline) {
+    Duration budget = new Budget(
+        request.timeout().orElseThrow(
+            () -> new IllegalStateException("Запрос к сервису " + name + " без таймаута ждал бы бесконечно")
+        ),
+        deadline
+    ).duration();
+    if (budget.isZero()) {
+      return false;
+    }
+    try (HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(budget).build()) {
+      return accepted.test(
+          client.send(
+              HttpRequest.newBuilder(attempt, (header, value) -> true).timeout(budget).build(),
+              HttpResponse.BodyHandlers.discarding()
+          ).statusCode()
+      );
     } catch (IOException e) {
       return false;
     } catch (InterruptedException e) {

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -58,6 +59,30 @@ class StandReadinessExtensionTest {
           0L,
           run(service.url(), "true", "1").testEvents().started().count(),
           "Тест выполнился, хотя сервис так и не ответил"
+      );
+    }
+  }
+
+  @Test
+  @DisplayName("Сервис принял соединение и завис — проверка ждёт его до срока, но не дольше")
+  void checkShouldFailByDeadlineWhenServiceHangs() throws IOException {
+    try (HangingPort port = new HangingPort().start()) {
+      assertEquals(
+          List.of(0L, true, true),
+          deadlineOutcome(port.url(), TestConfig.dbJdbcUrl(), "rfr-auth"),
+          "Проверка не дождалась срока, не уложилась в него или не назвала зависший сервис"
+      );
+    }
+  }
+
+  @Test
+  @DisplayName("MySQL принял соединение и молчит — проверка ждёт её до срока, но не дольше")
+  void checkShouldFailByDeadlineWhenMysqlHangs() throws IOException {
+    try (FakeService service = new FakeService(Duration.ZERO).start(); HangingPort port = new HangingPort().start()) {
+      assertEquals(
+          List.of(0L, true, true),
+          deadlineOutcome(service.url(), port.jdbcUrl(), "MySQL"),
+          "Проверка не дождалась срока, не уложилась в него или не назвала зависшую MySQL"
       );
     }
   }
@@ -147,6 +172,21 @@ class StandReadinessExtensionTest {
         .configurationParameter("rfr.front.url", url)
         .configurationParameter("rfr.db.jdbc.url", jdbcUrl)
         .execute();
+  }
+
+  /**
+   * Прогон образца со сроком 1 с: сколько тестов стартовало, названа ли служба в ошибке и закончилась ли проверка не
+   * раньше срока и не позже чем через 3 с.
+   */
+  private static List<Object> deadlineOutcome(String url, String jdbcUrl, String name) {
+    Instant start = Instant.now();
+    EngineExecutionResults results = run(url, "true", "1", jdbcUrl);
+    Duration elapsed = Duration.between(start, Instant.now());
+    return List.of(
+        results.testEvents().started().count(),
+        failures(results).anyMatch(message -> message.contains(name)),
+        elapsed.compareTo(Duration.ofSeconds(1)) >= 0 && elapsed.compareTo(Duration.ofSeconds(3)) < 0
+    );
   }
 
   private static Stream<String> failures(EngineExecutionResults results) {
@@ -258,6 +298,53 @@ class StandReadinessExtensionTest {
     @Override
     public void close() throws IOException {
       socket.close();
+    }
+  }
+
+  /**
+   * Подставной сервис на эфемерном порту, который принимает соединения и молчит, пока его не закроют.
+   */
+  private static final class HangingPort implements AutoCloseable {
+
+    private final ServerSocket socket;
+    private final Queue<Socket> connections;
+
+    HangingPort() throws IOException {
+      this(new ServerSocket(0, 50, InetAddress.getLoopbackAddress()), new ConcurrentLinkedQueue<>());
+    }
+
+    HangingPort(ServerSocket socket, Queue<Socket> connections) {
+      this.socket = socket;
+      this.connections = connections;
+    }
+
+    HangingPort start() {
+      Thread.ofVirtual().start(() -> {
+        while (!socket.isClosed()) {
+          try {
+            connections.add(socket.accept());
+          } catch (IOException e) {
+            return;
+          }
+        }
+      });
+      return this;
+    }
+
+    String url() {
+      return "http://" + socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort();
+    }
+
+    String jdbcUrl() {
+      return "jdbc:mysql://" + socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort() + "/?serverTimezone=UTC";
+    }
+
+    @Override
+    public void close() throws IOException {
+      socket.close();
+      for (Socket connection : connections) {
+        connection.close();
+      }
     }
   }
 

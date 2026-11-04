@@ -48,22 +48,23 @@ public final class StandReadinessExtension implements SuiteExtension {
 
   private void await(List<StandService> services, Duration timeout) {
     Instant deadline = Instant.now().plus(timeout);
-    List<StandService> silent = services.stream().filter(service -> !service.ready()).toList();
+    List<StandService> silent = services.stream().filter(service -> !service.ready(deadline)).toList();
     while (!silent.isEmpty()) {
-      if (!Instant.now().isBefore(deadline)) {
+      Duration remaining = Duration.between(Instant.now(), deadline);
+      if (remaining.isNegative() || remaining.isZero()) {
         throw new IllegalStateException(
             "Стенд не ответил за " + timeout.toSeconds() + " с, тесты не запускаются\n"
                 + silent.stream().map(StandService::outage).collect(Collectors.joining("\n"))
         );
       }
-      sleep();
-      silent = silent.stream().filter(service -> !service.ready()).toList();
+      sleep(remaining.compareTo(pause) < 0 ? remaining : pause);
+      silent = silent.stream().filter(service -> !service.ready(deadline)).toList();
     }
   }
 
-  private void sleep() {
+  private void sleep(Duration duration) {
     try {
-      Thread.sleep(pause);
+      Thread.sleep(duration);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Ожидание стенда прервано", e);
