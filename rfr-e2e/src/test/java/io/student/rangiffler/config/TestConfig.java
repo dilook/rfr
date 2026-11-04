@@ -1,5 +1,6 @@
 package io.student.rangiffler.config;
 
+import java.time.Duration;
 import java.util.Locale;
 
 /**
@@ -40,6 +41,14 @@ public final class TestConfig {
 
   public static boolean standSchemaCheck() {
     return Boolean.parseBoolean(get("stand.schema.check", "false"));
+  }
+
+  public static boolean standCheck() {
+    return Boolean.parseBoolean(get("standCheck", "false"));
+  }
+
+  public static Duration standTimeout() {
+    return Duration.ofSeconds(Long.parseLong(get("standTimeout", "180")));
   }
 
   public static String authMigrations() {
