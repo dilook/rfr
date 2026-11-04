@@ -1,5 +1,6 @@
 package io.student.rangiffler.jupiter.probe;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -19,10 +20,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,11 +106,27 @@ class StandReadinessExtensionTest {
   }
 
   @Test
-  @DisplayName("Проверка выключена — к сервису нет ни одного запроса")
+  @DisplayName("Сервис отвечает по имени хоста — запрос приходит с исходным Host")
+  void serviceShouldReceiveOriginalHost() throws IOException {
+    try (FakeService service = new FakeService(Duration.ZERO).start()) {
+      run(service.url("localhost"), "true", "3");
+      assertEquals(
+          List.of(URI.create(service.url("localhost")).getAuthority()),
+          service.hosts(),
+          "Проверка подменила Host на IP-адрес, хотя сервис отвечал по имени хоста"
+      );
+    }
+  }
+
+  @Test
+  @DisplayName("Проверка выключена — образец выполняется, а к сервису нет ни одного запроса")
   void disabledCheckShouldNotCallService() throws IOException {
     try (FakeService service = new FakeService(Duration.ZERO).start()) {
-      run(service.url(), "false", "1");
-      assertEquals(0, service.hits(), "Выключенная проверка обратилась к сервису");
+      assertEquals(
+          List.of(1L, 0),
+          List.of(run(service.url(), "false", "1").testEvents().succeeded().count(), service.hits()),
+          "Выключенная проверка обратилась к сервису или образец не выполнился"
+      );
     }
   }
 
@@ -137,15 +157,14 @@ class StandReadinessExtensionTest {
   }
 
   /**
-   * Подставной HTTP-сервис на эфемерном порту: до момента готовности отвечает 503, после — 200, и считает запросы,
-   * в том числе с заголовком Upgrade.
+   * Подставной HTTP-сервис на эфемерном порту: до момента готовности отвечает 503, после — 200, и запоминает заголовки
+   * каждого запроса.
    */
   private static final class FakeService implements HttpHandler, AutoCloseable {
 
     private final HttpServer server;
     private final Instant readiness;
-    private final AtomicInteger requests;
-    private final AtomicInteger upgrades;
+    private final Queue<Headers> requests;
 
     FakeService(Duration delay) throws IOException {
       this(delay, InetAddress.getLoopbackAddress());
@@ -155,16 +174,14 @@ class StandReadinessExtensionTest {
       this(
           HttpServer.create(new InetSocketAddress(address, 0), 0),
           Instant.now().plus(delay),
-          new AtomicInteger(),
-          new AtomicInteger()
+          new ConcurrentLinkedQueue<>()
       );
     }
 
-    FakeService(HttpServer server, Instant readiness, AtomicInteger requests, AtomicInteger upgrades) {
+    FakeService(HttpServer server, Instant readiness, Queue<Headers> requests) {
       this.server = server;
       this.readiness = readiness;
       this.requests = requests;
-      this.upgrades = upgrades;
     }
 
     FakeService start() {
@@ -182,19 +199,20 @@ class StandReadinessExtensionTest {
     }
 
     int hits() {
-      return requests.get();
+      return requests.size();
     }
 
     int upgrades() {
-      return upgrades.get();
+      return Math.toIntExact(requests.stream().filter(headers -> headers.containsKey("Upgrade")).count());
+    }
+
+    List<String> hosts() {
+      return requests.stream().map(headers -> headers.getFirst("Host")).distinct().toList();
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-      requests.incrementAndGet();
-      if (exchange.getRequestHeaders().containsKey("Upgrade")) {
-        upgrades.incrementAndGet();
-      }
+      requests.add(exchange.getRequestHeaders());
       exchange.sendResponseHeaders(Instant.now().isBefore(readiness) ? 503 : 200, -1);
       exchange.close();
     }

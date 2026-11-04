@@ -14,8 +14,10 @@ import java.util.function.IntPredicate;
 /**
  * Сервис стенда, готовый, когда на запрос пришёл ответ с подходящим статусом. Соединение и ответ ограничены таймаутом
  * самого запроса, поэтому запрос без таймаута отвергается, а не ждёт бесконечно. Как curl в scripts/wait-for-stand.sh,
- * запрос идёт по HTTP/1.1 на каждый адрес хоста по очереди: Vite слушает localhost только по IPv6 и зависает на
- * апгрейде до HTTP/2, а Java по умолчанию ходит на localhost по IPv4 и просит такой апгрейд.
+ * запрос идёт по HTTP/1.1, потому что Vite зависает на апгрейде до HTTP/2, который Java просит по умолчанию. Сначала
+ * запрос уходит по имени хоста, с исходными Host и TLS; только если он не прошёл, http-запрос повторяется на каждый
+ * адрес хоста: Vite слушает localhost только по IPv6, а Java по умолчанию ходит на localhost по IPv4. Для https адрес
+ * не подменяется, иначе сертификат не сойдётся с именем.
  */
 public final class HttpStandService implements StandService {
 
@@ -43,7 +45,10 @@ public final class HttpStandService implements StandService {
             )
             .build()
     ) {
-      return Arrays.stream(InetAddress.getAllByName(request.uri().getHost())).anyMatch(address -> answers(client, address));
+      return answers(client, request)
+          || "http".equalsIgnoreCase(request.uri().getScheme())
+          && Arrays.stream(InetAddress.getAllByName(request.uri().getHost()))
+          .anyMatch(address -> answers(client, direct(address)));
     } catch (UnknownHostException e) {
       return false;
     }
@@ -54,14 +59,9 @@ public final class HttpStandService implements StandService {
     return name + " (" + request.method() + " " + request.uri() + ") не ответил, поднять: " + command;
   }
 
-  private boolean answers(HttpClient client, InetAddress address) {
+  private boolean answers(HttpClient client, HttpRequest attempt) {
     try {
-      return accepted.test(
-          client.send(
-              HttpRequest.newBuilder(request, (header, value) -> true).uri(direct(address)).build(),
-              HttpResponse.BodyHandlers.discarding()
-          ).statusCode()
-      );
+      return accepted.test(client.send(attempt, HttpResponse.BodyHandlers.discarding()).statusCode());
     } catch (IOException e) {
       return false;
     } catch (InterruptedException e) {
@@ -70,13 +70,17 @@ public final class HttpStandService implements StandService {
     }
   }
 
-  private URI direct(InetAddress address) {
+  private HttpRequest direct(InetAddress address) {
     URI uri = request.uri();
     try {
-      return new URI(
-          uri.getScheme(), uri.getUserInfo(), address.getHostAddress(), uri.getPort(), uri.getPath(), uri.getQuery(),
-          uri.getFragment()
-      );
+      return HttpRequest.newBuilder(request, (header, value) -> true)
+          .uri(
+              new URI(
+                  uri.getScheme(), uri.getUserInfo(), address.getHostAddress(), uri.getPort(), uri.getPath(),
+                  uri.getQuery(), uri.getFragment()
+              )
+          )
+          .build();
     } catch (URISyntaxException e) {
       throw new IllegalStateException("Адрес " + address + " сервиса " + name + " не собирается в URI", e);
     }
