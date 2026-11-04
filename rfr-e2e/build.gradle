@@ -39,7 +39,7 @@ dependencies {
 
     testImplementation "org.junit.jupiter:junit-jupiter"
     testImplementation "org.junit.platform:junit-platform-testkit"
-    testImplementation "org.junit.platform:junit-platform-launcher"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     testRuntimeOnly "org.aspectj:aspectjrt:$aspectJVersion"
 }
 
@@ -59,7 +59,6 @@ tasks.withType(Test).configureEach {
 }
 
 tasks.register('e2e', Test) {
-   // maxParallelForks = 2
     group = 'verification'
     description = 'Runs all rfr-e2e tests with rfr.stand.schema.check=true so StandSchemaExtension refuses a local MySQL whose schemas drift from the backend migrations of the current checkout; plain test, build and IDE runs skip the check'
     testClassesDirs = sourceSets.test.output.classesDirs
