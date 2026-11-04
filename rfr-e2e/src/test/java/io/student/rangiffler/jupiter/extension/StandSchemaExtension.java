@@ -2,17 +2,20 @@ package io.student.rangiffler.jupiter.extension;
 
 import io.student.rangiffler.config.Config;
 import io.student.rangiffler.data.clients.MigrationDbClient;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.launcher.LauncherSession;
+import org.junit.platform.launcher.LauncherSessionListener;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Перед всем прогоном таски e2e сверяет схемы локальной MySQL с миграциями бэкендов текущей ветки: после переключения
- * веток без пересоздания БД код бэкендов и схема расходятся, и тесты падают на непонятных ошибках вместо одной понятной.
- * В остальных прогонах (test, build, IDE) флаг rfr.stand.schema.check выключен, и сверка не выполняется.
+ * При открытии сессии JUnit Platform таски e2e сверяет схемы локальной MySQL с миграциями бэкендов текущей ветки: после
+ * переключения веток без пересоздания БД код бэкендов и схема расходятся, и тесты падают на непонятных ошибках вместо
+ * одной понятной. Сессия открывается до обнаружения тестов, поэтому сверка идёт до первого теста любого движка, но
+ * по разу в каждой JVM: при maxParallelForks у каждого форка Gradle своя сессия. В остальных прогонах (test, build, IDE)
+ * флаг rfr.stand.schema.check выключен, и сверка не выполняется.
  */
-public final class StandSchemaExtension implements SuiteExtension {
+public final class StandSchemaExtension implements LauncherSessionListener {
 
   private final boolean enabled;
   private final List<MigrationDbClient> schemas;
@@ -33,8 +36,10 @@ public final class StandSchemaExtension implements SuiteExtension {
   }
 
   @Override
-  public void beforeSuite(ExtensionContext context) {
+  public void launcherSessionOpened(LauncherSession session) {
+    System.out.println("INIT!!!!!!!!!!");
     if (enabled) {
+      System.out.println("START!!!!!!!!!!");
       List<String> drifts = schemas.stream().map(MigrationDbClient::drift).flatMap(Optional::stream).toList();
       if (!drifts.isEmpty()) {
         throw new IllegalStateException(
