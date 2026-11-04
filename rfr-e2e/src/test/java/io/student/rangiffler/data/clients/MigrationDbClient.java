@@ -9,6 +9,7 @@ import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.output.ValidateResult;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -32,8 +33,10 @@ public class MigrationDbClient {
     this.schema = schema;
     this.location = location;
     // Без пустого ignoreMigrationPatterns Flyway по умолчанию молча пропускает миграции из БД, которых нет в ветке.
+    // Без таймаутов драйвер ждёт без срока базу, которая приняла соединение и молчит, и вешает afterSuite отчёта.
     this.flyway = Flyway.configure()
         .dataSource(jdbcUrl, TestConfig.dbUsername(), TestConfig.dbPassword())
+        .jdbcProperties(Map.of("connectTimeout", "5000", "socketTimeout", "5000"))
         .schemas(schema)
         .locations(location)
         .ignoreMigrationPatterns(new String[0])
