@@ -14,7 +14,11 @@ case "${file#"$root"/}" in
   *) exit 0 ;;
 esac
 cd "$root" || exit 0
-if ! output=$("${cmd[@]}" 2>&1 && if ((${#lint[@]})); then (cd "$module" && "${lint[@]}") 2>&1; fi); then
+output=$("${cmd[@]}" 2>&1) || failed=true
+if ((${#lint[@]})); then
+  output+=$'\n'$(cd "$module" && "${lint[@]}" 2>&1) || failed=true
+fi
+if [[ $failed ]]; then
   # Gradle repeats javac errors in its FAILURE summary; keep that summary only when nothing precedes it
   errors=$(sed '/^FAILURE:/,$d' <<<"$output")
   [[ -n "${errors//[[:space:]]/}" ]] || errors=$output
