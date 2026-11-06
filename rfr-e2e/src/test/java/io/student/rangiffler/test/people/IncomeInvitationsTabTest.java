@@ -18,21 +18,25 @@ public class IncomeInvitationsTabTest {
   @DisplayName("Вкладка Income invitations показывает только входящие приглашения, без исходящих")
   void incomeInvitationsTabShouldListOnlyInviters(@User(incomeInvitations = 1, outcomeInvitations = 1) TestUser user, Page page) {
     openIncomeInvitations(user, page)
-        .checkThatPeopleAre(usernames(user.incomeInvitations()));
+        .table()
+        .checkThatRowsAre(usernames(user.incomeInvitations()));
   }
 
   @Test
   @DisplayName("У входящего приглашения есть кнопки Accept и Decline")
   void incomeInvitationShouldHaveAcceptAndDeclineButtons(@User(incomeInvitations = 1) TestUser user, Page page) {
     openIncomeInvitations(user, page)
-        .checkThatInvitationCanBeAcceptedOrDeclined(user.incomeInvitations().getFirst().username());
+        .table()
+        .row(user.incomeInvitations().getFirst().username())
+        .checkThatCanBeAcceptedOrDeclined();
   }
 
   @Test
   @DisplayName("Вкладка Income invitations пуста у пользователя без входящих приглашений")
   void incomeInvitationsTabShouldBeEmptyWithoutInvitations(@User TestUser user, Page page) {
     openIncomeInvitations(user, page)
-        .checkThatNoPeopleAreListed();
+        .table()
+        .checkThatIsEmpty();
   }
 
   private static PeoplePage openIncomeInvitations(TestUser user, Page page) {

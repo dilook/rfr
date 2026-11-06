@@ -18,21 +18,25 @@ public class OutcomeInvitationsTabTest {
   @DisplayName("Вкладка Outcome invitations показывает только исходящие приглашения, без входящих")
   void outcomeInvitationsTabShouldListOnlyInvitees(@User(outcomeInvitations = 1, incomeInvitations = 1) TestUser user, Page page) {
     openOutcomeInvitations(user, page)
-        .checkThatPeopleAre(usernames(user.outcomeInvitations()));
+        .table()
+        .checkThatRowsAre(usernames(user.outcomeInvitations()));
   }
 
   @Test
   @DisplayName("Исходящее приглашение ждёт ответа и у него есть кнопка Cancel")
   void outcomeInvitationShouldBeWaitingWithCancelButton(@User(outcomeInvitations = 1) TestUser user, Page page) {
     openOutcomeInvitations(user, page)
-        .checkThatInvitationIsWaitingAndCanBeCancelled(user.outcomeInvitations().getFirst().username());
+        .table()
+        .row(user.outcomeInvitations().getFirst().username())
+        .checkThatIsWaitingAndCanBeCancelled();
   }
 
   @Test
   @DisplayName("Вкладка Outcome invitations пуста у пользователя без исходящих приглашений")
   void outcomeInvitationsTabShouldBeEmptyWithoutInvitations(@User TestUser user, Page page) {
     openOutcomeInvitations(user, page)
-        .checkThatNoPeopleAreListed();
+        .table()
+        .checkThatIsEmpty();
   }
 
   private static PeoplePage openOutcomeInvitations(TestUser user, Page page) {
