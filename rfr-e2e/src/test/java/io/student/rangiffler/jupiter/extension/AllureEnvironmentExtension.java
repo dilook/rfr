@@ -1,7 +1,6 @@
 package io.student.rangiffler.jupiter.extension;
 
 import com.microsoft.playwright.junit.Options;
-import io.student.rangiffler.config.PlaywrightOptions;
 import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.data.clients.MigrationDbClient;
 import org.junit.jupiter.api.extension.ExtensionContext;

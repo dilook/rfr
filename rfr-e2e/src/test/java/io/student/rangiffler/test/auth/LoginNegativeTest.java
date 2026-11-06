@@ -1,20 +1,17 @@
 package io.student.rangiffler.test.auth;
 
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.junit.UsePlaywright;
-import io.student.rangiffler.config.PlaywrightOptions;
 import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.ui.page.LoginPage;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
-@Tag("ui")
-@UsePlaywright(PlaywrightOptions.class)
+@UiTest
 public class LoginNegativeTest {
 
   private static final String BAD_CREDENTIALS = "Bad credentials";

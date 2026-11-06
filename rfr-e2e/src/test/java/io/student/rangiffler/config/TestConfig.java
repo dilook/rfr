@@ -71,6 +71,14 @@ public final class TestConfig {
     return Boolean.parseBoolean(get("headless", "true"));
   }
 
+  public static int viewportWidth() {
+    return Integer.parseInt(get("viewport.width", "1920"));
+  }
+
+  public static int viewportHeight() {
+    return Integer.parseInt(get("viewport.height", "1080"));
+  }
+
   public static String commit() {
     return get("commit", "unknown");
   }
