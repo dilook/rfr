@@ -113,7 +113,7 @@ export const PeopleTable: FC<PeopleTableInterface> = ({
                         <TableHead headCells={headCells}/>
                         <TableBody>
                             {data.map((row: User) => (
-                                    <TableRow key={row.id} hover tabIndex={-1}>
+                                    <TableRow key={row.id} hover tabIndex={-1} data-test-id="people-row">
                                         <TableCell component="th" scope="row" sx={{py: 1}}>
                                             <Avatar src={row.avatar}/>
                                         </TableCell>

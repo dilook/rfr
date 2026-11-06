@@ -1,7 +1,6 @@
 package io.student.rangiffler.ui.component;
 
 import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 
@@ -9,22 +8,17 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
 
 public final class PeopleRow {
 
-  private final Page page;
   private final String username;
   private final Locator row;
 
-  public PeopleRow(Page page, String username) {
-    this.page = page;
+  public PeopleRow(Locator row, String username) {
+    this.row = row;
     this.username = username;
-    Locator table = page.getByRole(AriaRole.MAIN).getByRole(AriaRole.TABPANEL).getByRole(AriaRole.TABLE);
-    this.row = table.getByRole(AriaRole.ROW).filter(new Locator.FilterOptions().setHas(
-        page.getByRole(AriaRole.CELL, new Page.GetByRoleOptions().setName(username).setExact(true))
-    ));
   }
 
   @Step("Нажать Add в строке {this.username}")
   public PeopleRow clickAdd() {
-    page.waitForResponse(new GraphQlOperation("FriendshipAction"), button("Add")::click);
+    row.page().waitForResponse(new GraphQlOperation("FriendshipAction"), button("Add")::click);
     return this;
   }
 
