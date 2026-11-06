@@ -6,8 +6,8 @@ import com.microsoft.playwright.junit.OptionsFactory;
 import io.student.rangiffler.config.TestConfig;
 
 /**
- * Опции браузера для @UsePlaywright. Размер окна задан явно: от высоты окна зависит ширина карты на главной, и
- * раскладка не должна меняться между headless и видимым браузером.
+ * Размер окна задан явно: от высоты окна зависит ширина карты на главной, и раскладка не должна меняться между
+ * headless и видимым браузером.
  */
 public final class PlaywrightOptions implements OptionsFactory {
 

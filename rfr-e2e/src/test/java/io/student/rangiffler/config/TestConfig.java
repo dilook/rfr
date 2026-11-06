@@ -71,6 +71,14 @@ public final class TestConfig {
     return Boolean.parseBoolean(get("headless", "true"));
   }
 
+  public static Duration actionTimeout() {
+    return Duration.ofSeconds(Long.parseLong(get("action.timeout", "5")));
+  }
+
+  public static Duration navigationTimeout() {
+    return Duration.ofSeconds(Long.parseLong(get("navigation.timeout", "30")));
+  }
+
   public static int viewportWidth() {
     return Integer.parseInt(get("viewport.width", "1920"));
   }
