@@ -6,10 +6,7 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.ui.component.GraphQlOperation;
-
-import java.util.List;
-
-import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import io.student.rangiffler.ui.component.PeopleTable;
 
 public final class PeoplePage {
 
@@ -22,9 +19,7 @@ public final class PeoplePage {
   private final Locator incomeInvitationsTab;
   private final Locator searchInput;
   private final Locator searchButton;
-  private final Locator people;
-  private final Locator noPeopleMessage;
-  private final Locator errorAlert;
+  private final PeopleTable table;
 
   public PeoplePage(Page page) {
     this.page = page;
@@ -36,9 +31,7 @@ public final class PeoplePage {
     Locator panel = main.getByRole(AriaRole.TABPANEL);
     this.searchInput = panel.getByRole(AriaRole.TEXTBOX, new Locator.GetByRoleOptions().setName("search people").setExact(true));
     this.searchButton = panel.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("search").setExact(true));
-    this.people = panel.getByRole(AriaRole.ROW).filter(new Locator.FilterOptions().setHas(page.getByRole(AriaRole.CELL)));
-    this.noPeopleMessage = panel.getByText("There are no users yet", new Locator.GetByTextOptions().setExact(true));
-    this.errorAlert = panel.getByRole(AriaRole.ALERT);
+    this.table = new PeopleTable(page);
   }
 
   @Step("Открыть вкладку Friends")
@@ -72,62 +65,7 @@ public final class PeoplePage {
     return this;
   }
 
-  @Step("Нажать Add у пользователя {username}")
-  public PeoplePage clickAdd(String username) {
-    page.waitForResponse(new GraphQlOperation("FriendshipAction"), button(username, "Add")::click);
-    return this;
-  }
-
-  @Step("Проверить, что в таблице ровно пользователи {usernames}")
-  public PeoplePage checkThatPeopleAre(List<String> usernames) {
-    assertThat(people).hasCount(usernames.size());
-    for (String username : usernames) {
-      assertThat(person(username)).isVisible();
-    }
-    return this;
-  }
-
-  @Step("Проверить, что в таблице есть пользователь {username}")
-  public PeoplePage checkThatPersonIsListed(String username) {
-    assertThat(person(username)).isVisible();
-    return this;
-  }
-
-  @Step("Проверить, что в таблице нет людей и нет ошибки загрузки")
-  public PeoplePage checkThatNoPeopleAreListed() {
-    assertThat(errorAlert).hasCount(0);
-    assertThat(people).hasCount(0);
-    assertThat(noPeopleMessage).isVisible();
-    return this;
-  }
-
-  @Step("Проверить, что друга {username} можно удалить")
-  public PeoplePage checkThatFriendCanBeRemoved(String username) {
-    assertThat(button(username, "Remove")).isVisible();
-    return this;
-  }
-
-  @Step("Проверить, что приглашение от {username} можно принять или отклонить")
-  public PeoplePage checkThatInvitationCanBeAcceptedOrDeclined(String username) {
-    assertThat(button(username, "Accept")).isVisible();
-    assertThat(button(username, "Decline")).isVisible();
-    return this;
-  }
-
-  @Step("Проверить, что приглашение для {username} ждёт ответа и его можно отменить")
-  public PeoplePage checkThatInvitationIsWaitingAndCanBeCancelled(String username) {
-    assertThat(person(username).getByText("Waiting...", new Locator.GetByTextOptions().setExact(true))).isVisible();
-    assertThat(button(username, "Cancel")).isVisible();
-    return this;
-  }
-
-  private Locator button(String username, String name) {
-    return person(username).getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(name).setExact(true));
-  }
-
-  private Locator person(String username) {
-    return people.filter(new Locator.FilterOptions().setHas(
-        page.getByRole(AriaRole.CELL, new Page.GetByRoleOptions().setName(username).setExact(true))
-    ));
+  public PeopleTable table() {
+    return table;
   }
 }

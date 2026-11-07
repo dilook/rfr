@@ -64,8 +64,11 @@ extension'ов, стоящих после упавшего, поэтому `Allu
 | `rfr.api.migrations` | `filesystem:../rfr-api/src/main/resources/db/migration/rangiffler-api` |
 | `rfr.db.username` / `rfr.db.password` | `root` / `secret` |
 | `rfr.headless` | `true` |
+| `rfr.action.timeout` | `5` — секунд на одно действие Playwright: клик, ввод, ожидание элемента или ответа |
+| `rfr.navigation.timeout` | `30` — секунд на переход Playwright: `navigate`, `reload`, `waitForURL` |
+| `rfr.viewport.width` / `rfr.viewport.height` | `1920` / `1080` — размер окна браузера |
 
-Браузер всегда Chromium (`PlaywrightOptions`).
+Браузер всегда Chromium, атрибут для `getByTestId` — `data-test-id` (`jupiter/extension/PlaywrightOptions`).
 
 ## Архитектура
 
@@ -73,8 +76,8 @@ extension'ов, стоящих после упавшего, поэтому `Allu
 
 | Пакет | Что лежит |
 |---|---|
-| `config` | `TestConfig` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
-| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `AllureEnvironmentExtension` — окружение прогона в отчёте Allure, `StandReadinessExtension` — ожидание стенда и `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, все подключены через ServiceLoader именно в этом порядке), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest`, `StandReadinessExtensionTest`, `AllureEnvironmentExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
+| `config` | `TestConfig` — единственная точка чтения настроек |
+| `jupiter` | всё про JUnit: `annotation` (`@UiTest` — UI-тест: тег `ui`, `@UsePlaywright` с `PlaywrightOptions` и `BrowserTimeoutExtension`; `@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`PlaywrightOptions` — опции браузера для `@UsePlaywright`; `BrowserTimeoutExtension` — тайм-ауты действий и переходов Playwright на контексте браузера теста; `UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `AllureEnvironmentExtension` — окружение прогона в отчёте Allure, `StandReadinessExtension` — ожидание стенда и `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, все подключены через ServiceLoader именно в этом порядке), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest`, `StandReadinessExtensionTest`, `AllureEnvironmentExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
 | `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient`, `MigrationDbClient` — Flyway validate одной схемы и команда исправления расхождения, `TemporarySchemaDbClient` — временная схема с каталогом миграций для проб; `StandService` — готовность одного сервиса стенда: `JdbcStandService` (JDBC-подключение выполняет `SELECT 1`), `HttpStandService` (подходящий HTTP-статус) |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
