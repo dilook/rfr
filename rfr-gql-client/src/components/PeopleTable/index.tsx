@@ -90,20 +90,22 @@ export const PeopleTable: FC<PeopleTableInterface> = ({
         <Card>
             <TableToolbar setSearch={setSearch} onSearchSubmit={onSearchSubmit}/>
             {data?.length > 0 && (compact ? (
-                <Stack divider={<Divider/>} sx={{borderTop: 1, borderColor: "divider"}}>
+                <Stack role="table" aria-labelledby="tableTitle" divider={<Divider/>} sx={{borderTop: 1, borderColor: "divider"}}>
                     {data.map((row: User) => (
-                        <Box key={row.id} sx={{display: "flex", alignItems: "center", gap: 2, px: 2, py: 1.5, flexWrap: "wrap"}}>
-                            <Avatar src={row.avatar} sx={{width: 44, height: 44}}/>
+                        <Box key={row.id} role="row" data-test-id="people-row" sx={{display: "flex", alignItems: "center", gap: 2, px: 2, py: 1.5, flexWrap: "wrap"}}>
+                            <Avatar role="cell" src={row.avatar} sx={{width: 44, height: 44}}/>
                             <Box sx={{flex: 1, minWidth: 140}}>
-                                <Typography sx={{fontWeight: 600}}>{row.username}</Typography>
-                                <Typography variant="body2" sx={{color: "text.secondary"}}>
+                                <Typography role="cell" sx={{fontWeight: 600}}>{row.username}</Typography>
+                                <Typography role="cell" variant="body2" sx={{color: "text.secondary"}}>
                                     {fullName(row) || "---"}
                                 </Typography>
-                                <Typography variant="body2" sx={{color: "text.secondary", mt: 0.25}}>
+                                <Typography role="cell" variant="body2" sx={{color: "text.secondary", mt: 0.25}}>
                                     <Location user={row}/>
                                 </Typography>
                             </Box>
-                            <ActionButtons userId={row.id} friendStatus={row.friendStatus}/>
+                            <Box role="cell">
+                                <ActionButtons userId={row.id} friendStatus={row.friendStatus}/>
+                            </Box>
                         </Box>
                     ))}
                 </Stack>
