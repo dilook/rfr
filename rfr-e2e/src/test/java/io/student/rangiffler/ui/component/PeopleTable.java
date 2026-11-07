@@ -39,9 +39,9 @@ public final class PeopleTable {
 
   @Step("Проверить, что таблица людей пуста и нет ошибки загрузки")
   public PeopleTable checkThatIsEmpty() {
+    assertThat(noPeopleMessage).isVisible();
     assertThat(errorAlert).hasCount(0);
     assertThat(rows).hasCount(0);
-    assertThat(noPeopleMessage).isVisible();
     return this;
   }
 

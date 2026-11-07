@@ -5,7 +5,6 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
-import io.student.rangiffler.ui.component.GraphQlOperation;
 import io.student.rangiffler.ui.component.PeopleTable;
 
 public final class PeoplePage {
@@ -48,13 +47,13 @@ public final class PeoplePage {
 
   @Step("Открыть вкладку Outcome invitations")
   public PeoplePage clickOutcomeInvitationsTab() {
-    page.waitForResponse(new GraphQlOperation("GetOutcomeInvitations"), outcomeInvitationsTab::click);
+    outcomeInvitationsTab.click();
     return this;
   }
 
   @Step("Открыть вкладку Income invitations")
   public PeoplePage clickIncomeInvitationsTab() {
-    page.waitForResponse(new GraphQlOperation("GetInvitations"), incomeInvitationsTab::click);
+    incomeInvitationsTab.click();
     return this;
   }
 

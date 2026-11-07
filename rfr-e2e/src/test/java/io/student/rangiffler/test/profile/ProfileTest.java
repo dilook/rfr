@@ -28,6 +28,7 @@ public class ProfileTest {
     openProfile(user, page)
         .fillFirstName("Ivan")
         .clickSave()
+        .checkThatProfileIsSaved()
         .reload()
         .checkThatFirstName("Ivan");
   }
@@ -38,6 +39,7 @@ public class ProfileTest {
     openProfile(user, page)
         .fillSurname("Petrov")
         .clickSave()
+        .checkThatProfileIsSaved()
         .reload()
         .checkThatSurname("Petrov");
   }
@@ -48,6 +50,7 @@ public class ProfileTest {
     openProfile(user, page)
         .uploadAvatar(AVATAR)
         .clickSave()
+        .checkThatProfileIsSaved()
         .reload()
         .checkThatAvatar(AVATAR);
   }
@@ -59,6 +62,7 @@ public class ProfileTest {
         .checkThatLocation(DEFAULT_COUNTRY)
         .selectLocation(NEW_COUNTRY)
         .clickSave()
+        .checkThatProfileIsSaved()
         .reload()
         .checkThatLocation(NEW_COUNTRY);
   }
@@ -69,6 +73,7 @@ public class ProfileTest {
     openProfile(user, page)
         .fillProfileForm("Ivan", "Petrov", NEW_COUNTRY, AVATAR)
         .clickSave()
+        .checkThatProfileIsSaved()
         .reload()
         .fillProfileForm("Sergey", "Sidorov", OTHER_COUNTRY, NEW_AVATAR)
         .clickReset()

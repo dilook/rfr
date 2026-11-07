@@ -18,7 +18,7 @@ public final class PhotoCard {
 
   @Step("Нажать like на карточке фото {this.description}")
   public PhotoCard clickLike() {
-    card.page().waitForResponse(new GraphQlOperation("LikePhoto"), button("like")::click);
+    button("like").click();
     return this;
   }
 
