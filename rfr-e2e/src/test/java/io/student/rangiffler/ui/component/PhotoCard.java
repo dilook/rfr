@@ -59,6 +59,6 @@ public final class PhotoCard {
   }
 
   private Locator button(String name) {
-    return card.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(name).setExact(true));
+    return card.page().getByRole(AriaRole.BUTTON, new com.microsoft.playwright.Page.GetByRoleOptions().setName(name).setExact(true));
   }
 }
