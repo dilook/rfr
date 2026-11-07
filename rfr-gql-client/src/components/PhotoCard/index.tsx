@@ -146,6 +146,7 @@ export const PhotoCard: FC<PhotoCardInterface> = ({photo, onEditClick}) => {
                 <Box sx={{display: "flex", alignItems: "center", mt: "auto"}}>
                     <IconButton
                         aria-label="like"
+                        aria-pressed={liked}
                         size="small"
                         onClick={handleLikePhoto}
                         sx={{color: liked ? "error.main" : "text.secondary", ml: -0.75}}

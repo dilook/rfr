@@ -80,6 +80,13 @@ public final class MyTravelsPage {
     return this;
   }
 
+  @Step("Проверить, что появилось сообщение об успешном лайке")
+  public MyTravelsPage checkThatLikeIsConfirmed() {
+    assertThat(page.getByRole(AriaRole.ALERT).filter(new Locator.FilterOptions().setHasText("Post was succesfully liked")))
+        .isVisible();
+    return this;
+  }
+
   @Step("Перезагрузить страницу")
   public MyTravelsPage reload() {
     page.reload();

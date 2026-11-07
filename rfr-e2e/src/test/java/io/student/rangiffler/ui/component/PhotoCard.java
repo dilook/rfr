@@ -41,6 +41,14 @@ public final class PhotoCard {
     return this;
   }
 
+  @Step("Проверить, что фото {this.description} отмечено моим лайком и у него {likes} лайк(ов)")
+  public PhotoCard checkThatIsLikedWith(int likes) {
+    assertThat(button("like")).hasAttribute("aria-pressed", "true");
+    assertThat(card.getByText(likes + (likes == 1 ? " like" : " likes"), new Locator.GetByTextOptions().setExact(true)))
+        .isVisible();
+    return this;
+  }
+
   private Locator button(String name) {
     return card.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(name).setExact(true));
   }
