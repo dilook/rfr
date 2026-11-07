@@ -12,7 +12,7 @@ export const InvitationsTable = () => {
         setPage(0);
     }
 
-    const {data, error, hasNextPage, hasPreviousPage, refetch} = useGetInvitations({page, search});
+    const {data, loading, error, hasNextPage, hasPreviousPage, refetch} = useGetInvitations({page, search});
 
     const onSearchSubmit = () => {
         refetch();
@@ -23,6 +23,7 @@ export const InvitationsTable = () => {
         <QueryErrorAlert error={error} onRetry={() => refetch()}/>
         <PeopleTable
             data={data}
+            loading={loading}
             page={page}
             setPage={setPage}
             hasNextPage={hasNextPage}
