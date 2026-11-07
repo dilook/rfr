@@ -24,7 +24,7 @@ public final class PeoplePage {
     this.page = page;
     Locator main = page.getByRole(AriaRole.MAIN);
     this.friendsTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("Friends").setExact(true));
-    this.allPeopleTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("All People").setExact(true));
+    this.allPeopleTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("All People2").setExact(true));
     this.outcomeInvitationsTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("Outcome invitations").setExact(true));
     this.incomeInvitationsTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("Income invitations").setExact(true));
     Locator panel = main.getByRole(AriaRole.TABPANEL);
