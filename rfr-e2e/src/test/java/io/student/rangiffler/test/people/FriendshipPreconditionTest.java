@@ -30,7 +30,10 @@ public class FriendshipPreconditionTest {
     PeoplePage people = openPeople(user, page)
         .clickAllPeopleTab()
         .searchPeople(friend.username());
-    people.table().row(friend.username()).clickAdd();
+    people.table()
+        .row(friend.username())
+        .clickAdd()
+        .checkThatIsWaitingAndCanBeCancelled();
     people.clickOutcomeInvitationsTab()
         .table()
         .row(friend.username())

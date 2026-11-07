@@ -3,6 +3,7 @@ import {
     Box,
     Card,
     Divider,
+    LinearProgress,
     Stack,
     Table,
     TableBody,
@@ -57,6 +58,7 @@ const headCells: readonly HeadCell[] = [
 
 interface PeopleTableInterface {
     data: User[];
+    loading: boolean;
     page: number;
     hasPreviousPage: boolean;
     hasNextPage: boolean;
@@ -76,6 +78,7 @@ const fullName = (user: User) => [user.firstname, user.surname].filter(Boolean).
 
 export const PeopleTable: FC<PeopleTableInterface> = ({
                                                           data,
+                                                          loading,
                                                           page,
                                                           hasPreviousPage,
                                                           hasNextPage,
@@ -89,21 +92,24 @@ export const PeopleTable: FC<PeopleTableInterface> = ({
     return (
         <Card>
             <TableToolbar setSearch={setSearch} onSearchSubmit={onSearchSubmit}/>
+            {loading && <LinearProgress aria-label="Loading people"/>}
             {data?.length > 0 && (compact ? (
-                <Stack divider={<Divider/>} sx={{borderTop: 1, borderColor: "divider"}}>
+                <Stack role="table" aria-labelledby="tableTitle" divider={<Divider/>} sx={{borderTop: 1, borderColor: "divider"}}>
                     {data.map((row: User) => (
-                        <Box key={row.id} sx={{display: "flex", alignItems: "center", gap: 2, px: 2, py: 1.5, flexWrap: "wrap"}}>
-                            <Avatar src={row.avatar} sx={{width: 44, height: 44}}/>
+                        <Box key={row.id} role="row" data-test-id="people-row" sx={{display: "flex", alignItems: "center", gap: 2, px: 2, py: 1.5, flexWrap: "wrap"}}>
+                            <Avatar role="cell" src={row.avatar} sx={{width: 44, height: 44}}/>
                             <Box sx={{flex: 1, minWidth: 140}}>
-                                <Typography sx={{fontWeight: 600}}>{row.username}</Typography>
-                                <Typography variant="body2" sx={{color: "text.secondary"}}>
+                                <Typography role="cell" sx={{fontWeight: 600}}>{row.username}</Typography>
+                                <Typography role="cell" variant="body2" sx={{color: "text.secondary"}}>
                                     {fullName(row) || "---"}
                                 </Typography>
-                                <Typography variant="body2" sx={{color: "text.secondary", mt: 0.25}}>
+                                <Typography role="cell" variant="body2" sx={{color: "text.secondary", mt: 0.25}}>
                                     <Location user={row}/>
                                 </Typography>
                             </Box>
-                            <ActionButtons userId={row.id} friendStatus={row.friendStatus}/>
+                            <Box role="cell">
+                                <ActionButtons userId={row.id} friendStatus={row.friendStatus}/>
+                            </Box>
                         </Box>
                     ))}
                 </Stack>
@@ -130,7 +136,7 @@ export const PeopleTable: FC<PeopleTableInterface> = ({
                     </Table>
                 </TableContainer>
             ))}
-            {!data?.length && (
+            {!loading && !data?.length && (
                 <Box sx={{textAlign: "center", py: 10, px: 3, borderTop: 1, borderColor: "divider"}}>
                     <PeopleOutlineOutlinedIcon sx={{fontSize: 72, color: "primary.main", opacity: 0.6}}/>
                     <Typography variant="h6" component="p" sx={{mt: 2}}>

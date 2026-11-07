@@ -90,3 +90,19 @@ tasks.register('installPlaywright', JavaExec) {
     mainClass = 'com.microsoft.playwright.CLI'
     args 'install', 'chromium'
 }
+
+tasks.register('showTrace', JavaExec) {
+    group = 'verification'
+    description = 'Opens a trace.zip that TraceExtension saved for a failed UI test in Playwright TraceViewer; pass its path relative to rfr-e2e with -Ptrace=build/traces/<package.Class>.<method>-<hash>.zip, and the task stops with a hint when the property is missing or the file does not exist'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.microsoft.playwright.CLI'
+    doFirst {
+        if (!providers.gradleProperty('trace').present) {
+            throw new GradleException('showTrace needs the trace path relative to rfr-e2e, for example -Ptrace=build/traces/<package.Class>.<method>-<hash>.zip')
+        }
+        if (!file(providers.gradleProperty('trace').get()).exists()) {
+            throw new GradleException("Trace file ${file(providers.gradleProperty('trace').get())} does not exist, look for the saved traces in ${file('build/traces')}")
+        }
+    }
+    argumentProviders.add({ ['show-trace', file(providers.gradleProperty('trace').get()).path] } as CommandLineArgumentProvider)
+}
