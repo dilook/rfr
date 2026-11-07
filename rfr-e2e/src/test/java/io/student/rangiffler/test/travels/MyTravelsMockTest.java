@@ -20,6 +20,7 @@ public class MyTravelsMockTest {
   private static final int FRIENDS_PHOTOS = 7;
   private static final int FRIENDS_COUNTRIES = 7;
   private static final String OWN_PHOTO = "Париж!";
+  private static final int OWN_PHOTO_LIKES = 2;
   private static final String FRIEND_COUNTRY = "Czech Republic";
   private static final String FRIEND_PHOTO = "Старая Прага завораживает!";
 
@@ -72,6 +73,14 @@ public class MyTravelsMockTest {
         .clickWithFriends()
         .photo(FRIEND_PHOTO)
         .checkThatHasNoPhotoActions();
+  }
+
+  @Test
+  @DisplayName("Карточка показывает число лайков из mock-ленты")
+  void photoCardShouldShowLikesFromFeed(@User TestUser user, Page page) {
+    openMyTravels(user, page)
+        .photo(OWN_PHOTO)
+        .checkThatLikesAre(OWN_PHOTO_LIKES);
   }
 
   private static MyTravelsPage openMyTravels(TestUser user, Page page) {

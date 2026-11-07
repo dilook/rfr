@@ -41,12 +41,21 @@ public final class PhotoCard {
     return this;
   }
 
+  @Step("Проверить, что у фото {this.description} {likes} лайк(ов)")
+  public PhotoCard checkThatLikesAre(int likes) {
+    assertThat(counter(likes)).isVisible();
+    return this;
+  }
+
   @Step("Проверить, что фото {this.description} отмечено моим лайком и у него {likes} лайк(ов)")
   public PhotoCard checkThatIsLikedWith(int likes) {
     assertThat(button("like")).hasAttribute("aria-pressed", "true");
-    assertThat(card.getByText(likes + (likes == 1 ? " like" : " likes"), new Locator.GetByTextOptions().setExact(true)))
-        .isVisible();
+    assertThat(counter(likes)).isVisible();
     return this;
+  }
+
+  private Locator counter(int likes) {
+    return card.getByText(likes + (likes == 1 ? " like" : " likes"), new Locator.GetByTextOptions().setExact(true));
   }
 
   private Locator button(String name) {
