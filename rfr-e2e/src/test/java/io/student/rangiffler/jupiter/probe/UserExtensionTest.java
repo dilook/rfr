@@ -5,6 +5,7 @@ import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.data.UserFixture;
 import io.student.rangiffler.data.UserWithFriendsFixture;
 import io.student.rangiffler.data.UserWithIncomeInvitationsFixture;
+import io.student.rangiffler.data.UserWithOutcomeInvitationsFixture;
 import io.student.rangiffler.data.clients.ApiUserDbClient;
 import io.student.rangiffler.data.clients.AuthUserDbClient;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;
@@ -79,6 +80,55 @@ class UserExtensionTest {
   }
 
   @Test
+  @DisplayName("close() удаляет пригласившего, упавшего до создания приглашённых, и несозданных приглашённых не трогает")
+  void closeShouldDeleteInviterCreatedBeforeFailureInsideOutcomeInvitationsChain() {
+    UserFixture fixture = new UserWithOutcomeInvitationsFixture(new FailingFixture(new SingleUserFixture(TestUser.unique())), 1);
+    assertEquals(List.of(), leftovers(fixture), "После падения create() до приглашённых в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("close() удаляет пригласившего и всех приглашённых после падения в самом конце create()")
+  void closeShouldDeleteInviterAndInviteesAfterFailureAtEndOfChain() {
+    UserFixture fixture = new FailingFixture(new UserWithOutcomeInvitationsFixture(new SingleUserFixture(TestUser.unique()), 2));
+    assertEquals(List.of(), leftovers(fixture), "После падения create() после приглашений в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("close() удаляет всех пользователей полной цепочки после падения в самом конце create()")
+  void closeShouldDeleteAllUsersAfterFailureAtEndOfFullChain() {
+    UserFixture fixture = new FailingFixture(new UserWithOutcomeInvitationsFixture(
+        new UserWithIncomeInvitationsFixture(new UserWithFriendsFixture(new SingleUserFixture(TestUser.unique()), 1), 1), 1
+    ));
+    assertEquals(List.of(), leftovers(fixture), "После падения create() в конце полной цепочки в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("close() удаляет созданных до падения между входящими и исходящими приглашениями и несозданных приглашённых не трогает")
+  void closeShouldDeleteUsersCreatedBeforeFailureBetweenIncomeAndOutcomeInvitations() {
+    UserFixture fixture = new UserWithOutcomeInvitationsFixture(new FailingFixture(
+        new UserWithIncomeInvitationsFixture(new UserWithFriendsFixture(new SingleUserFixture(TestUser.unique()), 1), 1)
+    ), 1);
+    assertEquals(List.of(), leftovers(fixture), "После падения create() между входящими и исходящими приглашениями в БД остались пользователи");
+  }
+
+  @Test
+  @DisplayName("Пользователь из @User(friends, incomeInvitations, outcomeInvitations) и все связанные удаляются из обеих БД после теста")
+  void userWithAllRelationsShouldBeDeletedAfterTest() {
+    Map<String, String> entry = entry(UserWithAllRelations.class);
+    List<String> created = Stream.of(
+        List.of(entry.get("username")),
+        values(entry.get("friends")),
+        values(entry.get("incomeInvitations")),
+        values(entry.get("outcomeInvitations"))
+    ).flatMap(List::stream).toList();
+    assertEquals(
+        List.of(4, List.of()),
+        List.of(created.size(), existing(created)),
+        "После теста со всеми тремя связями создано не 4 пользователя или не все удалены"
+    );
+  }
+
+  @Test
   @DisplayName("Два параметра @User получают разных пользователей")
   void twoUserParametersShouldGetDifferentUsers() {
     Map<String, String> entry = entry(TwoUsers.class);
@@ -91,7 +141,7 @@ class UserExtensionTest {
     Map<String, String> entry = entry(UserWithFriendsAndInvitations.class);
     assertEquals(
         List.of(2, 1),
-        List.of(usernames(entry.get("friends")).size(), usernames(entry.get("incomeInvitations")).size()),
+        List.of(values(entry.get("friends")).size(), values(entry.get("incomeInvitations")).size()),
         "У пользователя не 2 друга и не 1 входящее приглашение"
     );
   }
@@ -102,10 +152,65 @@ class UserExtensionTest {
     Map<String, String> entry = entry(UserWithFriendsAndInvitations.class);
     List<String> created = Stream.of(
         List.of(entry.get("username")),
-        usernames(entry.get("friends")),
-        usernames(entry.get("incomeInvitations"))
+        values(entry.get("friends")),
+        values(entry.get("incomeInvitations"))
     ).flatMap(List::stream).toList();
     assertEquals(List.of(), existing(created), "Не все пользователи, созданные для @User, удалены после теста");
+  }
+
+  @Test
+  @DisplayName("Пользователь из @User(outcomeInvitations) несёт приглашённых")
+  void userShouldCarryOutcomeInvitations() {
+    assertEquals(
+        3,
+        values(entry(UserWithOutcomeInvitations.class).get("outcomeInvitations")).size(),
+        "У пользователя не 3 исходящих приглашения"
+    );
+  }
+
+  @Test
+  @DisplayName("Приглашённые из @User удаляются из обеих БД после теста")
+  void inviteesShouldBeDeletedAfterTest() {
+    Map<String, String> entry = entry(UserWithOutcomeInvitations.class);
+    List<String> created = Stream.of(List.of(entry.get("username")), values(entry.get("outcomeInvitations")))
+        .flatMap(List::stream)
+        .toList();
+    assertEquals(List.of(), existing(created), "Не все пользователи, созданные для @User(outcomeInvitations), удалены после теста");
+  }
+
+  @Test
+  @DisplayName("Во время теста с @User(outcomeInvitations = 1) есть приглашение PENDING от пользователя приглашённому")
+  void pendingInvitationFromUserToInviteeShouldExistDuringTest() {
+    assertEquals(
+        1,
+        values(entry(UserWithOneOutcomeInvitation.class).get("friendships")).size(),
+        "Во время теста нет ровно одного приглашения PENDING от пользователя приглашённому"
+    );
+  }
+
+  @Test
+  @DisplayName("После теста с @User(outcomeInvitations = 1) нет ни приглашения, ни профиля приглашённого")
+  void invitationAndInviteeShouldBeDeletedAfterTest() {
+    Map<String, String> entry = entry(UserWithOneOutcomeInvitation.class);
+    assertEquals(
+        List.of(1, false, List.of()),
+        List.of(
+            values(entry.get("friendships")).size(),
+            values(entry.get("friendships")).stream().anyMatch(API_USER_DB_CLIENT::friendshipExists),
+            existing(List.of(entry.get("invitee")))
+        ),
+        "После теста осталось приглашение или профиль приглашённого"
+    );
+  }
+
+  @Test
+  @DisplayName("@User(outcomeInvitations = -1) падает с IllegalArgumentException")
+  void negativeOutcomeInvitationsCannotBeResolved() {
+    assertInstanceOf(
+        IllegalArgumentException.class,
+        failure(NegativeOutcomeInvitations.class),
+        "@User(outcomeInvitations = -1) не привёл к IllegalArgumentException"
+    );
   }
 
   @Test
@@ -158,7 +263,7 @@ class UserExtensionTest {
     }
     TestUser user = fixture.user();
     return existing(
-        Stream.of(List.of(user), user.friends(), user.incomeInvitations())
+        Stream.of(List.of(user), user.friends(), user.incomeInvitations(), user.outcomeInvitations())
             .flatMap(List::stream)
             .map(TestUser::username)
             .toList()
@@ -171,8 +276,8 @@ class UserExtensionTest {
         .toList();
   }
 
-  private static List<String> usernames(String joined) {
-    return Arrays.stream(joined.split(",")).filter(username -> !username.isEmpty()).toList();
+  private static List<String> values(String joined) {
+    return Arrays.stream(joined.split(",")).filter(value -> !value.isEmpty()).toList();
   }
 
   private static String joined(List<TestUser> users) {
@@ -253,6 +358,53 @@ class UserExtensionTest {
           "friends", joined(user.friends()),
           "incomeInvitations", joined(user.incomeInvitations())
       ));
+    }
+  }
+
+  @ProbeTarget
+  static class UserWithOutcomeInvitations {
+
+    @Test
+    void test(@User(outcomeInvitations = 3) TestUser user, TestReporter reporter) {
+      reporter.publishEntry(Map.of(
+          "username", user.username(),
+          "outcomeInvitations", joined(user.outcomeInvitations())
+      ));
+    }
+  }
+
+  @ProbeTarget
+  static class UserWithAllRelations {
+
+    @Test
+    void test(@User(friends = 1, incomeInvitations = 1, outcomeInvitations = 1) TestUser user, TestReporter reporter) {
+      reporter.publishEntry(Map.of(
+          "username", user.username(),
+          "friends", joined(user.friends()),
+          "incomeInvitations", joined(user.incomeInvitations()),
+          "outcomeInvitations", joined(user.outcomeInvitations())
+      ));
+    }
+  }
+
+  @ProbeTarget
+  static class UserWithOneOutcomeInvitation {
+
+    @Test
+    void test(@User(outcomeInvitations = 1) TestUser user, TestReporter reporter) {
+      String invitee = user.outcomeInvitations().getFirst().username();
+      reporter.publishEntry(Map.of(
+          "invitee", invitee,
+          "friendships", String.join(",", API_USER_DB_CLIENT.friendshipIds(user.username(), invitee, "PENDING"))
+      ));
+    }
+  }
+
+  @ProbeTarget
+  static class NegativeOutcomeInvitations {
+
+    @Test
+    void test(@User(outcomeInvitations = -1) TestUser user) {
     }
   }
 
