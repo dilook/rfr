@@ -39,6 +39,11 @@ public final class StaticUserFixture implements UserFixture {
 
   @Override
   public void create() {
+    taken.get().ifPresent(user -> {
+      throw new IllegalStateException(
+          "Фикстура уже владеет статическим пользователем " + user.username() + ": повторный create() потерял бы его при close()"
+      );
+    });
     try {
       TestUser user = QUEUE.poll(TIMEOUT_SECONDS, TimeUnit.SECONDS);
       if (user == null) {

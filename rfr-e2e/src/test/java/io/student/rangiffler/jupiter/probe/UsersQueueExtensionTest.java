@@ -67,6 +67,21 @@ class UsersQueueExtensionTest {
     );
   }
 
+  @Test
+  @DisplayName("Повторный create() не уводит пользователя из пула")
+  void secondCreateShouldNotTakeUserFromPool() {
+    UserFixture fixture = new StaticUserFixture();
+    fixture.create();
+    try {
+      fixture.create();
+    } catch (IllegalStateException expected) {
+      // Отказ повторного create() допустим: проба проверяет только, что после close() пул снова полон
+    } finally {
+      fixture.close();
+    }
+    assertTrue(poolIsFull(), "Повторный create() увёл пользователя из пула");
+  }
+
   private static String emptyQueueError() {
     List<UserFixture> pool = Stream.<UserFixture>generate(StaticUserFixture::new).limit(4).toList();
     try {
