@@ -4,6 +4,7 @@ import com.microsoft.playwright.Page;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.Config;
 import io.student.rangiffler.ui.component.HeaderComponent;
+import io.student.rangiffler.ui.component.SidebarComponent;
 
 public final class MyTravelsPage {
 
@@ -11,10 +12,12 @@ public final class MyTravelsPage {
 
   private final Page page;
   private final HeaderComponent header;
+  private final SidebarComponent sidebar;
 
   public MyTravelsPage(Page page) {
     this.page = page;
     this.header = new HeaderComponent(page);
+    this.sidebar = new SidebarComponent(page);
   }
 
   @Step("Перезагрузить страницу")
@@ -32,6 +35,11 @@ public final class MyTravelsPage {
   @Step("Перейти в профиль")
   public ProfilePage goToProfile() {
     return header.clickProfile();
+  }
+
+  @Step("Перейти к людям")
+  public PeoplePage goToPeople() {
+    return sidebar.clickPeople();
   }
 
   @Step("Выйти из приложения")
