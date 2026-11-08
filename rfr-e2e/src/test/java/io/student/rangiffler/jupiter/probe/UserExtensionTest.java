@@ -1,11 +1,11 @@
 package io.student.rangiffler.jupiter.probe;
 
-import io.student.rangiffler.data.SingleUserFixture;
+import io.student.rangiffler.data.fixture.SingleUserFixture;
 import io.student.rangiffler.data.TestUser;
-import io.student.rangiffler.data.UserFixture;
-import io.student.rangiffler.data.UserWithFriendsFixture;
-import io.student.rangiffler.data.UserWithIncomeInvitationsFixture;
-import io.student.rangiffler.data.UserWithOutcomeInvitationsFixture;
+import io.student.rangiffler.data.fixture.UserFixture;
+import io.student.rangiffler.data.fixture.UserWithFriendsFixture;
+import io.student.rangiffler.data.fixture.UserWithIncomeInvitationsFixture;
+import io.student.rangiffler.data.fixture.UserWithOutcomeInvitationsFixture;
 import io.student.rangiffler.data.clients.ApiUserDbClient;
 import io.student.rangiffler.data.clients.AuthUserDbClient;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;

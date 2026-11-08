@@ -1,7 +1,7 @@
 package io.student.rangiffler.test.web;
 
 import com.microsoft.playwright.Page;
-import io.student.rangiffler.data.SingleUserFixture;
+import io.student.rangiffler.data.fixture.SingleUserFixture;
 import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.ui.page.WelcomePage;
