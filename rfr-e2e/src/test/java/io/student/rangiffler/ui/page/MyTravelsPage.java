@@ -29,6 +29,12 @@ public final class MyTravelsPage {
     this.sidebar = new SidebarComponent(page);
   }
 
+  @Step("Открыть My Travels")
+  public MyTravelsPage open() {
+    page.navigate(URL);
+    return this;
+  }
+
   public PhotoCard photo(String description) {
     return new PhotoCard(card(description), description);
   }

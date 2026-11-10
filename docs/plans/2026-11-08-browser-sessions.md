@@ -72,7 +72,7 @@ class InvitationBetweenSessionsTest {
     - кладёт фикстуру в Store по индексу параметра до `create()` (правило 2 `rfr-test-review`), затем вызывает
       `create()`.
   - `contexts` — это `Supplier<BrowserContext>`. Он вызывает `BrowserExtension.getOrCreateBrowser(context).newContext()`
-    с `contextOptions` и `baseUrl` из `new PlaywrightOptions().getOptions()`, затем
+    с `contextOptions` и `baseUrl` из `new PlaywrightOptions().getOptions()`, как Playwright собирает контекст `Page` теста: `Browser` опций контекста не хранит, затем
     `BrowserTimeoutExtension.configure()`. Благодаря поставщику пакет `session` не зависит от `jupiter`.
   - `supportsParameter()` принимает `@Session` с типом `UserSession` или `GuestSession`, объявленный в тестовом
     методе (`getDeclaringExecutable()` против `getTestMethod()`, правило 11).
@@ -136,7 +136,8 @@ class InvitationBetweenSessionsTest {
 1. **`UserExtension.user()` и создание пользователя для любого типа параметра с `@User`.** Проба в
    `jupiter/probe/UserExtensionTest`: образец с параметром `@User` собственного типа и тестовым `ParameterResolver`,
    который вызывает `UserExtension.user()` и публикует username. Пользователь существует во время теста и удалён после
-   него. Нужна только MySQL.
+   него. `UserExtension.user()` для параметра без `@User` падает с ошибкой о несозданном пользователе. Нужна только
+   MySQL.
 2. **`BrowserTimeoutExtension.configure()`.** Поведение не меняется, подтверждает прогон существующих UI-тестов.
 3. **`GuestSessionFixture` и `SessionExtension` для `GuestSession`.** Новая проба `jupiter/probe/SessionExtensionTest`.
    Образцы с `@ProbeTarget` и `@UsePlaywright(PlaywrightOptions.class)`, как в `TraceExtensionTest`. Нужен только
@@ -148,10 +149,15 @@ class InvitationBetweenSessionsTest {
      `TestConfig.actionTimeout()` (`Timeout 5000ms exceeded`), а не 30 000 мс по умолчанию;
    - `UserSession` без `@User`, `@User GuestSession` и `@Session String` дают `ParameterResolutionException` с
      параметром в тексте;
-   - тест без `@Session` в классе с `@Session`-тестом не получает контекстов (правило 11).
+   - `@Session` на параметре `@BeforeEach` даёт `ParameterResolutionException`;
+   - `SessionExtension`, подключённый над классом, не открывает контекстов для теста без `@Session` и не роняет его
+     (правило 11). Аннотация на параметре подключает extension только к своему методу, поэтому соседний тест его не
+     видит, и проверять нужно именно подключение над классом;
+   - `close()` у `GuestSessionFixture` не падает, если `create()` не получил контекст. Проверяется без браузера, на
+     поставщике, который бросает исключение.
 4. **`MyTravelsPage.open()`, `UserSessionFixture` и `UserSession`.** Пробы в `SessionExtensionTest`, нужен стенд:
-   - `@Session @User UserSession` — `openMyTravels()` показывает авторизованного пользователя; после теста контекст
-     закрыт, а пользователь удалён;
+   - `@Session @User UserSession` — из `openMyTravels()` проба переходит в профиль, и `checkThatUsername()`
+     подтверждает, что вошёл именно пользователь из `@User`; после теста контекст закрыт, а пользователь удалён;
    - вход не удался (образец с `UserSessionFixture` для незарегистрированного `TestUser.unique()`): `create()` падает на
      `checkThatUserIsLoggedIn()`, а `close()` закрывает контекст.
 5. **UI-тест `test/people/InvitationBetweenSessionsTest`.** Алиса через `page` приглашает Боба, Боб в своей сессии
