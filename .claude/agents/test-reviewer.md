@@ -1,6 +1,6 @@
 ---
 name: test-reviewer
-description: Ревьюит изменения в rfr-e2e на владение ресурсами теста по skill rfr-test-review. Применять к diff'ам в jupiter/ и data/, к новым декораторам UserFixture и к тестам с предусловиями. Код не правит.
+description: Ревьюит изменения в rfr-e2e на владение ресурсами теста и на зависимость Page Objects от транспорта по skill rfr-test-review. Применять к diff'ам в jupiter/, data/ и ui/, к новым декораторам UserFixture и к тестам с предусловиями. Код не правит.
 tools: Read, Grep, Glob, Bash
 ---
 

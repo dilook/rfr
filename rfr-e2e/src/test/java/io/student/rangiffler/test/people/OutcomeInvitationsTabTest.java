@@ -5,7 +5,6 @@ import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.ui.page.PeoplePage;
-import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -40,12 +39,7 @@ public class OutcomeInvitationsTabTest {
   }
 
   private static PeoplePage openOutcomeInvitations(TestUser user, Page page) {
-    return new WelcomePage(page)
-        .open()
-        .clickLogin()
-        .fillLoginForm(user.username(), user.password())
-        .clickSignIn()
-        .goToPeople()
+    return PeopleLogin.open(page, user)
         .clickOutcomeInvitationsTab();
   }
 

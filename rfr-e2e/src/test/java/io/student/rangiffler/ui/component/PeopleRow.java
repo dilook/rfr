@@ -18,7 +18,25 @@ public final class PeopleRow {
 
   @Step("Нажать Add в строке {this.username}")
   public PeopleRow clickAdd() {
-    button("Add").click();
+    button(PeopleAction.ADD).click();
+    return this;
+  }
+
+  @Step("Нажать Accept в строке {this.username}")
+  public PeopleRow clickAccept() {
+    button(PeopleAction.ACCEPT).click();
+    return this;
+  }
+
+  @Step("Нажать Decline в строке {this.username}")
+  public PeopleRow clickDecline() {
+    button(PeopleAction.DECLINE).click();
+    return this;
+  }
+
+  @Step("Нажать Remove в строке {this.username}")
+  public PeopleRow clickRemove() {
+    button(PeopleAction.REMOVE).click();
     return this;
   }
 
@@ -28,27 +46,22 @@ public final class PeopleRow {
     return this;
   }
 
-  @Step("Проверить, что в строке {this.username} есть Remove")
-  public PeopleRow checkThatCanBeRemoved() {
-    assertThat(button("Remove")).isVisible();
-    return this;
-  }
-
-  @Step("Проверить, что в строке {this.username} есть Accept и Decline")
-  public PeopleRow checkThatCanBeAcceptedOrDeclined() {
-    assertThat(button("Accept")).isVisible();
-    assertThat(button("Decline")).isVisible();
+  @Step("Проверить, что в строке {this.username} есть кнопки {actions}")
+  public PeopleRow checkThatHasActions(PeopleAction... actions) {
+    for (PeopleAction action : actions) {
+      assertThat(button(action)).isVisible();
+    }
     return this;
   }
 
   @Step("Проверить, что в строке {this.username} есть Waiting... и Cancel")
   public PeopleRow checkThatIsWaitingAndCanBeCancelled() {
     assertThat(row.getByText("Waiting...", new Locator.GetByTextOptions().setExact(true))).isVisible();
-    assertThat(button("Cancel")).isVisible();
+    assertThat(button(PeopleAction.CANCEL)).isVisible();
     return this;
   }
 
-  private Locator button(String name) {
-    return row.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(name).setExact(true));
+  private Locator button(PeopleAction action) {
+    return row.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(action.toString()).setExact(true));
   }
 }

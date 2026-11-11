@@ -26,6 +26,7 @@ public class LoginTest {
   @DisplayName("Сессия сохраняется после перезагрузки страницы")
   void sessionShouldSurviveReload(@User TestUser user, Page page) {
     login(user, page)
+        .checkThatUserIsLoggedIn()
         .reload()
         .checkThatUserIsLoggedIn()
         .goToProfile()

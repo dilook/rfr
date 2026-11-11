@@ -4,8 +4,8 @@ import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
+import io.student.rangiffler.ui.component.PeopleAction;
 import io.student.rangiffler.ui.page.PeoplePage;
-import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +28,7 @@ public class IncomeInvitationsTabTest {
     openIncomeInvitations(user, page)
         .table()
         .row(user.incomeInvitations().getFirst().username())
-        .checkThatCanBeAcceptedOrDeclined();
+        .checkThatHasActions(PeopleAction.ACCEPT, PeopleAction.DECLINE);
   }
 
   @Test
@@ -40,12 +40,7 @@ public class IncomeInvitationsTabTest {
   }
 
   private static PeoplePage openIncomeInvitations(TestUser user, Page page) {
-    return new WelcomePage(page)
-        .open()
-        .clickLogin()
-        .fillLoginForm(user.username(), user.password())
-        .clickSignIn()
-        .goToPeople()
+    return PeopleLogin.open(page, user)
         .clickIncomeInvitationsTab();
   }
 

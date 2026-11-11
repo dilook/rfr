@@ -38,6 +38,7 @@ public final class LoginPage {
   @Step("Нажать Sign in")
   public MyTravelsPage clickSignIn() {
     signInButton.click();
+    page.waitForURL(MyTravelsPage.URL);
     return new MyTravelsPage(page);
   }
 

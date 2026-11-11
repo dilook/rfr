@@ -91,13 +91,14 @@ class TraceExtensionTest {
   }
 
   private static EngineExecutionResults run(Class<?> sample, Path traces) {
-    return EngineTestKit.engine("junit-jupiter")
-        .selectors(DiscoverySelectors.selectClass(sample))
-        .configurationParameter(ProbeTargetCondition.ENABLED, "true")
-        // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
-        .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
-        .configurationParameter("rfr.trace.dir", traces.toString())
-        .execute();
+    return new IsolatedRun(
+        EngineTestKit.engine("junit-jupiter")
+            .selectors(DiscoverySelectors.selectClass(sample))
+            .configurationParameter(ProbeTargetCondition.ENABLED, "true")
+            // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
+            .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
+            .configurationParameter("rfr.trace.dir", traces.toString())
+    ).results();
   }
 
   @ProbeTarget
