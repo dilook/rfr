@@ -97,7 +97,7 @@ class InvitationBetweenSessionsTest {
   origin` и `TestUser user`:
   - `create()` вызывает `origin.create()`, затем гость входит через UI:
     `origin.session().welcomePage().open().clickLogin().fillLoginForm(...).clickSignIn().checkThatUserIsLoggedIn()`.
-    Проверка в конце нужна, чтобы тест не начался посреди редиректов OAuth;
+    Дождаться конца редиректов OAuth теперь отвечает сам `clickSignIn()`: он ждёт адреса My Travels с тайм-аутом перехода (после падения e2e в CI на PR #11);
   - `session()` возвращает `new UserSession(origin.session().page(), user)`;
   - `close()` вызывает `origin.close()`;
   - пользователя не удаляет: им владеет фикстура `UserExtension`.
@@ -158,8 +158,8 @@ class InvitationBetweenSessionsTest {
 4. **`MyTravelsPage.open()`, `UserSessionFixture` и `UserSession`.** Пробы в `SessionExtensionTest`, нужен стенд:
    - `@Session @User UserSession` — из `openMyTravels()` проба переходит в профиль, и `checkThatUsername()`
      подтверждает, что вошёл именно пользователь из `@User`; после теста контекст закрыт, а пользователь удалён;
-   - вход не удался (образец с `UserSessionFixture` для незарегистрированного `TestUser.unique()`): `create()` падает на
-     `checkThatUserIsLoggedIn()`, а `close()` закрывает контекст.
+   - вход не удался (образец с `UserSessionFixture` для незарегистрированного `TestUser.unique()`): `create()` падает на ожидании адреса My Travels в
+     `clickSignIn()` (`TimeoutError`), а `close()` закрывает контекст.
 5. **UI-тест `test/people/InvitationBetweenSessionsTest`.** Алиса через `page` приглашает Боба, Боб в своей сессии
    видит приглашение во входящих, гость видит стартовую страницу без входа.
 

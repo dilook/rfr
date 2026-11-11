@@ -3,6 +3,7 @@ package io.student.rangiffler.jupiter.probe;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.impl.junit.BrowserExtension;
 import com.microsoft.playwright.junit.UsePlaywright;
 import io.student.rangiffler.config.TestConfig;
@@ -38,7 +39,6 @@ import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
-import org.opentest4j.AssertionFailedError;
 
 import java.util.List;
 import java.util.Map;
@@ -286,6 +286,8 @@ class SessionExtensionTest {
   private static BrowserContext configured(Browser browser) {
     BrowserContext context = browser.newContext();
     BrowserTimeoutExtension.configure(context);
+    // Неудачный вход ждёт адреса My Travels весь тайм-аут перехода; проба проверяет close(), а не тайм-ауты.
+    context.setDefaultNavigationTimeout(TestConfig.actionTimeout().toMillis());
     return context;
   }
 
@@ -485,7 +487,7 @@ class SessionExtensionTest {
       );
       try {
         fixture.create();
-      } catch (AssertionFailedError expected) {
+      } catch (TimeoutError expected) {
         fixture.close();
       }
       reporter.publishEntry("contexts", String.valueOf(browser.contexts().size()));
