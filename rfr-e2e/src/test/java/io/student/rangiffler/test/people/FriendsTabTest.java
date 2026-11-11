@@ -4,6 +4,7 @@ import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
+import io.student.rangiffler.ui.component.PeopleAction;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ public class FriendsTabTest {
     PeopleLogin.open(page, user)
         .table()
         .row(user.friends().getFirst().username())
-        .checkThatCanBeRemoved();
+        .checkThatHasActions(PeopleAction.REMOVE);
   }
 
   @Test

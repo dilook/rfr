@@ -7,6 +7,7 @@ import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.session.GuestSession;
 import io.student.rangiffler.session.UserSession;
+import io.student.rangiffler.ui.component.PeopleAction;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public class InvitationBetweenSessionsTest {
         .clickIncomeInvitationsTab()
         .table()
         .row(alice.username())
-        .checkThatCanBeAcceptedOrDeclined();
+        .checkThatHasActions(PeopleAction.ACCEPT, PeopleAction.DECLINE);
   }
 
   @Test
