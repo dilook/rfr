@@ -19,10 +19,11 @@
 - Дополнительная сессия браузера — параметр `@Session @User UserSession` (пользователь из `@User` уже вошёл через UI в своём контексте, `openMyTravels()`) или `@Session GuestSession` (контекст без входа, `welcomePage()`). `Page page` теста остаётся за `@UsePlaywright`. Пользователя сессии создаёт и удаляет `UserExtension`, а контекст — фикстура из `session/fixture`, которую `SessionExtension` создаёт в `beforeTestExecution` и кладёт в Store; трассы у контекстов сессий нет.
 - `UserExtension` кладёт `UserFixture` в `ExtensionContext.Store` до `create()`, и JUnit сам закрывает её после теста, даже упавшего или с ошибкой в `beforeEach`; `AfterEachCallback` не нужен.
 - Случайного пользователя даёт `TestUser.unique()`. Пользователя, которого регистрирует сам тест через UI, удаляют так: поле `TestUser user = TestUser.unique()` и `new SingleUserFixture(user).close()` в `@AfterEach`, без `create()` (см. `RegistrationTest`).
+- Принятые исключения из правил `.claude/CLAUDE.md` (без статических методов, служебных классов и методов доступа) — не нарушения, ревью их не «исправляет»: `UserExtension.user(context, index)` и `BrowserTimeoutExtension.configure(context)` статические по образцу `BrowserContextExtension.getOrCreateBrowserContext()` из Playwright, чтобы `SessionExtension` брал пользователя и тайм-ауты у тех же extension'ов; `test/people/PeopleLogin` — статический хелпер входа тестов People; enum `PeopleAction` и `Notification` отдают текст через `toString()`.
 
 ## Подводные камни
 
-- Успешный snackbar или обновлённая карточка на фронте не доказывают сохранение: Apollo обновляет кэш из ответа мутации. Проверяй независимым чтением.
+- Успешный snackbar или обновлённая карточка на фронте не доказывают сохранение: Apollo обновляет кэш из ответа мутации. Проверяй независимым чтением: `reload()` страницы, который сбрасывает кэш Apollo, или чтение другим пользователем в его `@Session` (см. `FriendshipLifecycleTest`).
 - Таблицы People до прихода данных показывают индикатор загрузки (`progressbar` «Loading people»), а «There are no users yet» — только после ответа или при ошибке запроса: проверка пустой вкладки сначала ждёт это сообщение и только потом требует отсутствия `alert`, иначе пропустит ошибку, пришедшую позже.
 - Page Objects не ждут ответов API: перед `reload()`, переходом или сменой вкладки тест проверяет видимый результат действия (сообщение об успехе, новое состояние строки).
 - Скрипт `.claude/hooks/compile.sh` читает JSON хука из stdin: вручную не запускать, компилировать через `./gradlew -q :rfr-e2e:compileTestJava`.
