@@ -16,7 +16,7 @@ public class FriendshipPreconditionTest {
   @Test
   @DisplayName("Друзья и входящие приглашения из @User видны на странице People")
   void friendsAndIncomeInvitationsShouldBeCreated(@User(friends = 2, incomeInvitations = 1) TestUser user, Page page) {
-    PeoplePage people = PeopleLogin.open(page, user);
+    PeoplePage people = PeopleLogin.open(page, user).clickFriendsTab();
     people.table().checkThatRowsAre(usernames(user.friends()));
     people.clickIncomeInvitationsTab()
         .table()

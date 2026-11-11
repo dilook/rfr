@@ -17,6 +17,7 @@ public class FriendsTabTest {
   @DisplayName("Вкладка Friends показывает только друзей, без входящих приглашений")
   void friendsTabShouldListOnlyFriends(@User(friends = 1, incomeInvitations = 1) TestUser user, Page page) {
     PeopleLogin.open(page, user)
+        .clickFriendsTab()
         .table()
         .checkThatRowsAre(usernames(user.friends()));
   }
@@ -25,6 +26,7 @@ public class FriendsTabTest {
   @DisplayName("У друга на вкладке Friends есть кнопка Remove")
   void friendShouldHaveRemoveButton(@User(friends = 1) TestUser user, Page page) {
     PeopleLogin.open(page, user)
+        .clickFriendsTab()
         .table()
         .row(user.friends().getFirst().username())
         .checkThatHasActions(PeopleAction.REMOVE);
@@ -34,6 +36,7 @@ public class FriendsTabTest {
   @DisplayName("Вкладка Friends пуста у пользователя без друзей")
   void friendsTabShouldBeEmptyWithoutFriends(@User TestUser user, Page page) {
     PeopleLogin.open(page, user)
+        .clickFriendsTab()
         .table()
         .checkThatIsEmpty();
   }
