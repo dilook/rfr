@@ -7,8 +7,6 @@ import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.session.GuestSession;
 import io.student.rangiffler.session.UserSession;
-import io.student.rangiffler.ui.page.MyTravelsPage;
-import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,8 +16,7 @@ public class InvitationBetweenSessionsTest {
   @Test
   @DisplayName("Приглашение в друзья, отправленное из браузера теста, видно приглашённому во входящих в его сессии")
   void invitationSentFromBrowserShouldBeListedInInviteeSession(Page page, @User TestUser alice, @Session @User UserSession bob) {
-    login(alice, page)
-        .goToPeople()
+    PeopleLogin.open(page, alice)
         .clickAllPeopleTab()
         .searchPeople(bob.user().username())
         .table()
@@ -37,17 +34,9 @@ public class InvitationBetweenSessionsTest {
   @Test
   @DisplayName("Гостевая сессия не авторизована, хотя в браузере теста пользователь вошёл")
   void guestSessionShouldStayLoggedOutWhileUserIsLoggedIn(Page page, @User TestUser alice, @Session GuestSession guest) {
-    login(alice, page).checkThatUserIsLoggedIn();
+    PeopleLogin.open(page, alice);
     guest.welcomePage()
         .open()
         .checkThatUserIsLoggedOut();
-  }
-
-  private static MyTravelsPage login(TestUser user, Page page) {
-    return new WelcomePage(page)
-        .open()
-        .clickLogin()
-        .fillLoginForm(user.username(), user.password())
-        .clickSignIn();
   }
 }
