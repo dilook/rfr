@@ -6,8 +6,10 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.ui.component.HeaderComponent;
+import io.student.rangiffler.ui.component.Notification;
 import io.student.rangiffler.ui.component.PhotoCard;
 import io.student.rangiffler.ui.component.SidebarComponent;
+import io.student.rangiffler.ui.component.Snackbar;
 
 import java.util.regex.Pattern;
 
@@ -21,12 +23,14 @@ public final class MyTravelsPage {
   private final Locator main;
   private final HeaderComponent header;
   private final SidebarComponent sidebar;
+  private final Snackbar snackbar;
 
   public MyTravelsPage(Page page) {
     this.page = page;
     this.main = page.getByRole(AriaRole.MAIN);
     this.header = new HeaderComponent(page);
     this.sidebar = new SidebarComponent(page);
+    this.snackbar = new Snackbar(page);
   }
 
   @Step("Открыть My Travels")
@@ -86,10 +90,9 @@ public final class MyTravelsPage {
     return this;
   }
 
-  @Step("Проверить, что появилось сообщение об успешном лайке")
-  public MyTravelsPage checkThatLikeIsConfirmed() {
-    assertThat(page.getByRole(AriaRole.ALERT).filter(new Locator.FilterOptions().setHasText("Post was succesfully liked")))
-        .isVisible();
+  @Step("Проверить сообщение «{notification}» на странице My Travels")
+  public MyTravelsPage checkThatNotification(Notification notification) {
+    snackbar.checkThatShows(notification);
     return this;
   }
 

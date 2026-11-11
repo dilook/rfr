@@ -4,6 +4,7 @@ import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
+import io.student.rangiffler.ui.component.Notification;
 import io.student.rangiffler.ui.page.ProfilePage;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +29,7 @@ public class ProfileTest {
     openProfile(user, page)
         .fillFirstName("Ivan")
         .clickSave()
-        .checkThatProfileIsSaved()
+        .checkThatNotification(Notification.PROFILE_UPDATED)
         .reload()
         .checkThatFirstName("Ivan");
   }
@@ -39,7 +40,7 @@ public class ProfileTest {
     openProfile(user, page)
         .fillSurname("Petrov")
         .clickSave()
-        .checkThatProfileIsSaved()
+        .checkThatNotification(Notification.PROFILE_UPDATED)
         .reload()
         .checkThatSurname("Petrov");
   }
@@ -50,7 +51,7 @@ public class ProfileTest {
     openProfile(user, page)
         .uploadAvatar(AVATAR)
         .clickSave()
-        .checkThatProfileIsSaved()
+        .checkThatNotification(Notification.PROFILE_UPDATED)
         .reload()
         .checkThatAvatar(AVATAR);
   }
@@ -62,7 +63,7 @@ public class ProfileTest {
         .checkThatLocation(DEFAULT_COUNTRY)
         .selectLocation(NEW_COUNTRY)
         .clickSave()
-        .checkThatProfileIsSaved()
+        .checkThatNotification(Notification.PROFILE_UPDATED)
         .reload()
         .checkThatLocation(NEW_COUNTRY);
   }
@@ -73,7 +74,7 @@ public class ProfileTest {
     openProfile(user, page)
         .fillProfileForm("Ivan", "Petrov", NEW_COUNTRY, AVATAR)
         .clickSave()
-        .checkThatProfileIsSaved()
+        .checkThatNotification(Notification.PROFILE_UPDATED)
         .reload()
         .fillProfileForm("Sergey", "Sidorov", OTHER_COUNTRY, NEW_AVATAR)
         .clickReset()
