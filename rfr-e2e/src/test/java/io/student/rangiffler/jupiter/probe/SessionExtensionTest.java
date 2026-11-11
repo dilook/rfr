@@ -16,6 +16,7 @@ import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import io.student.rangiffler.jupiter.extension.BrowserTimeoutExtension;
 import io.student.rangiffler.jupiter.extension.PlaywrightOptions;
 import io.student.rangiffler.jupiter.extension.SessionExtension;
+import io.student.rangiffler.jupiter.extension.UserExtension;
 import io.student.rangiffler.session.GuestSession;
 import io.student.rangiffler.session.UserSession;
 import io.student.rangiffler.session.fixture.GuestSessionFixture;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestReporter;
 import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -97,12 +100,34 @@ class SessionExtensionTest {
   }
 
   @Test
+  @DisplayName("@Session на UserSession без @User не оставляет открытых контекстов")
+  void userSessionWithoutUserShouldLeaveNoContext() {
+    assertEquals("0", entry(UserSessionWithoutUser.class).get("contexts"), "@Session UserSession без @User оставил открытый контекст");
+  }
+
+  @Test
   @DisplayName("@Session @User на GuestSession роняет тест как ошибка настройки")
   void guestSessionWithUserShouldFailAsMisconfiguration() {
     assertInstanceOf(
         ExtensionConfigurationException.class,
         failure(GuestSessionWithUser.class),
         "@Session @User GuestSession не привёл к ExtensionConfigurationException"
+    );
+  }
+
+  @Test
+  @DisplayName("@Session @User на GuestSession не оставляет открытых контекстов")
+  void guestSessionWithUserShouldLeaveNoContext() {
+    assertEquals("0", entry(GuestSessionWithUser.class).get("contexts"), "@Session @User GuestSession оставил открытый контекст");
+  }
+
+  @Test
+  @DisplayName("Пользователь из @User на GuestSession удаляется из обеих БД, хотя тест упал до сессии")
+  void guestSessionWithUserShouldLeaveNoUser() {
+    assertEquals(
+        List.of(false, false),
+        presence(entry(GuestSessionWithUser.class).get("username")),
+        "Пользователь, созданный для @Session @User GuestSession, не удалён после теста"
     );
   }
 
@@ -149,10 +174,9 @@ class SessionExtensionTest {
   @Test
   @DisplayName("Пользователь UserSession удаляется из обеих БД после теста")
   void userSessionUserShouldBeDeletedAfterTest() {
-    String username = entry(LoggedInUserSession.class).get("username");
     assertEquals(
         List.of(false, false),
-        List.of(AUTH_USER_DB_CLIENT.userExists(username), API_USER_DB_CLIENT.userExists(username)),
+        presence(entry(LoggedInUserSession.class).get("username")),
         "Пользователь UserSession не удалён после теста"
     );
   }
@@ -161,6 +185,36 @@ class SessionExtensionTest {
   @DisplayName("Контекст UserSession закрыт после теста")
   void userContextShouldBeClosedAfterTest() {
     assertEquals("0", entry(LoggedInUserSession.class).get("contexts"), "Контекст UserSession не закрыт после теста");
+  }
+
+  @Test
+  @DisplayName("Пользователь UserSession удаляется из обеих БД после упавшего теста")
+  void userSessionUserShouldBeDeletedAfterFailedTest() {
+    assertEquals(
+        List.of(false, false),
+        presence(entry(FailedUserSession.class).get("username")),
+        "Пользователь UserSession не удалён после упавшего теста"
+    );
+  }
+
+  @Test
+  @DisplayName("Контекст UserSession закрыт после упавшего теста")
+  void userContextShouldBeClosedAfterFailedTest() {
+    assertEquals("0", entry(FailedUserSession.class).get("contexts"), "Контекст UserSession не закрыт после упавшего теста");
+  }
+
+  @Test
+  @DisplayName("UserSession и @User TestUser одного теста получают разных пользователей")
+  void sessionUserShouldDifferFromTestUser() {
+    Map<String, String> entry = entry(SessionBesideTestUser.class);
+    assertNotEquals(entry.get("user"), entry.get("session"), "UserSession получила того же пользователя, что и @User TestUser");
+  }
+
+  @Test
+  @DisplayName("Две UserSession одного теста получают разных пользователей")
+  void twoUserSessionsShouldGetDifferentUsers() {
+    Map<String, String> entry = entry(TwoUserSessions.class);
+    assertNotEquals(entry.get("first"), entry.get("second"), "Две UserSession получили одного пользователя");
   }
 
   @Test
@@ -202,6 +256,12 @@ class SessionExtensionTest {
         .orElseThrow(() -> new IllegalStateException("Образец " + sample.getSimpleName() + " не упал"));
   }
 
+  private static List<Boolean> presence(String username) {
+    String published = Optional.ofNullable(username)
+        .orElseThrow(() -> new IllegalStateException("Образец не опубликовал username"));
+    return List.of(AUTH_USER_DB_CLIENT.userExists(published), API_USER_DB_CLIENT.userExists(published));
+  }
+
   private static String closedAfterFailure(SessionFixture<?> fixture) {
     try {
       fixture.create();
@@ -230,6 +290,14 @@ class SessionExtensionTest {
     @Override
     public void afterAll(ExtensionContext context) {
       context.publishReportEntry("contexts", String.valueOf(BrowserExtension.getOrCreateBrowser(context).contexts().size()));
+    }
+  }
+
+  static final class PublishedUser implements AfterEachCallback {
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+      context.publishReportEntry("username", UserExtension.user(context, 0).username());
     }
   }
 
@@ -279,6 +347,7 @@ class SessionExtensionTest {
 
   @ProbeTarget
   @UsePlaywright(PlaywrightOptions.class)
+  @ExtendWith(OpenContexts.class)
   static class UserSessionWithoutUser {
 
     @Test
@@ -288,6 +357,7 @@ class SessionExtensionTest {
 
   @ProbeTarget
   @UsePlaywright(PlaywrightOptions.class)
+  @ExtendWith({OpenContexts.class, PublishedUser.class})
   static class GuestSessionWithUser {
 
     @Test
@@ -339,6 +409,38 @@ class SessionExtensionTest {
       bob.openMyTravels()
           .goToProfile()
           .checkThatUsername(bob.user().username());
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  @ExtendWith(OpenContexts.class)
+  static class FailedUserSession {
+
+    @Test
+    void test(@Session @User UserSession bob, TestReporter reporter) {
+      reporter.publishEntry("username", bob.user().username());
+      fail("Образец падает намеренно");
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  static class SessionBesideTestUser {
+
+    @Test
+    void test(@User TestUser alice, @Session @User UserSession bob, TestReporter reporter) {
+      reporter.publishEntry(Map.of("user", alice.username(), "session", bob.user().username()));
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  static class TwoUserSessions {
+
+    @Test
+    void test(@Session @User UserSession alice, @Session @User UserSession bob, TestReporter reporter) {
+      reporter.publishEntry(Map.of("first", alice.user().username(), "second", bob.user().username()));
     }
   }
 
