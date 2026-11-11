@@ -16,11 +16,11 @@ public class UserExtension implements BeforeEachCallback, ParameterResolver {
 
   private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(UserExtension.class);
 
-  public static TestUser user(ExtensionContext context, int index) {
-    UserFixture fixture = context.getStore(NAMESPACE).get(index, UserFixture.class);
+  public static TestUser user(ExtensionContext context, int parameterIndex) {
+    UserFixture fixture = context.getStore(NAMESPACE).get(parameterIndex, UserFixture.class);
     if (fixture == null) {
       throw new ParameterResolutionException(
-          "Пользователь для параметра с индексом " + index + " не создан: у параметра нет @User или beforeEach UserExtension не выполнялся"
+          "Пользователь для параметра с индексом " + parameterIndex + " не создан: у параметра нет @User или beforeEach UserExtension не выполнялся"
       );
     }
     return fixture.user();
