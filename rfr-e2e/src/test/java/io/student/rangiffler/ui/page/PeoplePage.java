@@ -13,7 +13,6 @@ public final class PeoplePage {
 
   public static final String URL = TestConfig.frontUrl() + "/people";
 
-  private final Page page;
   private final Locator friendsTab;
   private final Locator allPeopleTab;
   private final Locator outcomeInvitationsTab;
@@ -24,7 +23,6 @@ public final class PeoplePage {
   private final PeopleTable table;
 
   public PeoplePage(Page page) {
-    this.page = page;
     Locator main = page.getByRole(AriaRole.MAIN);
     this.friendsTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("Friends").setExact(true));
     this.allPeopleTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("All People").setExact(true));
@@ -35,12 +33,6 @@ public final class PeoplePage {
     this.searchButton = panel.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("search").setExact(true));
     this.snackbar = new Snackbar(page);
     this.table = new PeopleTable(page);
-  }
-
-  @Step("Перезагрузить страницу")
-  public PeoplePage reload() {
-    page.reload();
-    return this;
   }
 
   @Step("Проверить сообщение «{notification}» на странице People")

@@ -22,6 +22,7 @@ import io.student.rangiffler.session.UserSession;
 import io.student.rangiffler.session.fixture.GuestSessionFixture;
 import io.student.rangiffler.session.fixture.SessionFixture;
 import io.student.rangiffler.session.fixture.UserSessionFixture;
+import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,8 +52,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Образцы с GuestSession запускают настоящий Chromium без стенда, образцы с UserSession входят через UI и требуют
- * поднятого стенда. Playwright читает @UsePlaywright с самого внешнего класса теста, поэтому аннотация стоит и на
+ * Образцы с одной GuestSession без @User и без входа в Page запускают настоящий Chromium без стенда; образцы с @User
+ * нуждаются в MySQL, а образцы, которые входят через UI (UserSession или вход в Page), — в поднятом стенде. Playwright читает @UsePlaywright с самого внешнего класса теста, поэтому аннотация стоит и на
  * пробе. OpenContexts считает открытые контексты браузера в afterAll: он зарегистрирован после @UsePlaywright, поэтому
  * JUnit вызывает его раньше, чем Playwright закроет браузер.
  */
@@ -66,6 +67,16 @@ class SessionExtensionTest {
   @DisplayName("GuestSession получает страницу в отдельном контексте, а не страницу @UsePlaywright")
   void guestSessionShouldGetPageInSeparateContext() {
     assertEquals("true", entry(SeparateContext.class).get("separate"), "GuestSession получила контекст @UsePlaywright");
+  }
+
+  @Test
+  @DisplayName("GuestSession остаётся без входа, хотя в Page теста пользователь вошёл")
+  void guestSessionShouldStayLoggedOutBesideLoggedInPage() {
+    assertEquals(
+        1L,
+        run(GuestBesideLoggedInPage.class).testEvents().succeeded().count(),
+        "GuestSession оказалась авторизованной после входа пользователя в Page теста"
+    );
   }
 
   @Test
@@ -308,6 +319,24 @@ class SessionExtensionTest {
     @Test
     void test(Page page, @Session GuestSession guest, TestReporter reporter) {
       reporter.publishEntry("separate", String.valueOf(guest.page().context() != page.context()));
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  static class GuestBesideLoggedInPage {
+
+    @Test
+    void test(Page page, @User TestUser alice, @Session GuestSession guest) {
+      new WelcomePage(page)
+          .open()
+          .clickLogin()
+          .fillLoginForm(alice.username(), alice.password())
+          .clickSignIn()
+          .checkThatUserIsLoggedIn();
+      guest.welcomePage()
+          .open()
+          .checkThatUserIsLoggedOut();
     }
   }
 
