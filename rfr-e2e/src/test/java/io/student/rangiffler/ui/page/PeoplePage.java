@@ -5,7 +5,9 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
+import io.student.rangiffler.ui.component.Notification;
 import io.student.rangiffler.ui.component.PeopleTable;
+import io.student.rangiffler.ui.component.Snackbar;
 
 public final class PeoplePage {
 
@@ -18,6 +20,7 @@ public final class PeoplePage {
   private final Locator incomeInvitationsTab;
   private final Locator searchInput;
   private final Locator searchButton;
+  private final Snackbar snackbar;
   private final PeopleTable table;
 
   public PeoplePage(Page page) {
@@ -30,7 +33,20 @@ public final class PeoplePage {
     Locator panel = main.getByRole(AriaRole.TABPANEL);
     this.searchInput = panel.getByRole(AriaRole.TEXTBOX, new Locator.GetByRoleOptions().setName("search people").setExact(true));
     this.searchButton = panel.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("search").setExact(true));
+    this.snackbar = new Snackbar(page);
     this.table = new PeopleTable(page);
+  }
+
+  @Step("Перезагрузить страницу")
+  public PeoplePage reload() {
+    page.reload();
+    return this;
+  }
+
+  @Step("Проверить сообщение «{notification}» на странице People")
+  public PeoplePage checkThatNotification(Notification notification) {
+    snackbar.checkThatShows(notification);
+    return this;
   }
 
   @Step("Открыть вкладку Friends")

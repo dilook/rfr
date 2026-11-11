@@ -22,6 +22,18 @@ public final class PeopleRow {
     return this;
   }
 
+  @Step("Нажать Accept в строке {this.username}")
+  public PeopleRow clickAccept() {
+    button(PeopleAction.ACCEPT).click();
+    return this;
+  }
+
+  @Step("Нажать Remove в строке {this.username}")
+  public PeopleRow clickRemove() {
+    button(PeopleAction.REMOVE).click();
+    return this;
+  }
+
   @Step("Проверить, что строка {this.username} есть в таблице")
   public PeopleRow checkThatIsListed() {
     assertThat(row).isVisible();

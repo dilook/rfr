@@ -2,6 +2,8 @@ package io.student.rangiffler.ui.component;
 
 public enum Notification {
 
+  INVITATION_ACCEPTED("Invitation accepted"),
+  FRIEND_DELETED("Friend deleted"),
   POST_LIKED("Post was succesfully liked"),
   PROFILE_UPDATED("Your profile is successfully updated");
 
