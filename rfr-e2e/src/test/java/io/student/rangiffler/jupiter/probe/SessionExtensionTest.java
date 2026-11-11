@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestReporter;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.platform.engine.TestExecutionResult;
@@ -86,32 +87,32 @@ class SessionExtensionTest {
   }
 
   @Test
-  @DisplayName("@Session на UserSession без @User не разрешается")
-  void userSessionWithoutUserCannotBeResolved() {
+  @DisplayName("@Session на UserSession без @User роняет тест как ошибка настройки")
+  void userSessionWithoutUserShouldFailAsMisconfiguration() {
     assertInstanceOf(
-        ParameterResolutionException.class,
+        ExtensionConfigurationException.class,
         failure(UserSessionWithoutUser.class),
-        "@Session UserSession без @User не привёл к ParameterResolutionException"
+        "@Session UserSession без @User не привёл к ExtensionConfigurationException"
     );
   }
 
   @Test
-  @DisplayName("@Session @User на GuestSession не разрешается")
-  void guestSessionWithUserCannotBeResolved() {
+  @DisplayName("@Session @User на GuestSession роняет тест как ошибка настройки")
+  void guestSessionWithUserShouldFailAsMisconfiguration() {
     assertInstanceOf(
-        ParameterResolutionException.class,
+        ExtensionConfigurationException.class,
         failure(GuestSessionWithUser.class),
-        "@Session @User GuestSession не привёл к ParameterResolutionException"
+        "@Session @User GuestSession не привёл к ExtensionConfigurationException"
     );
   }
 
   @Test
-  @DisplayName("@Session на параметре не типа сессии не разрешается")
-  void sessionOnNonSessionParameterCannotBeResolved() {
+  @DisplayName("@Session на параметре не типа сессии роняет тест как ошибка настройки")
+  void sessionOnNonSessionParameterShouldFailAsMisconfiguration() {
     assertInstanceOf(
-        ParameterResolutionException.class,
+        ExtensionConfigurationException.class,
         failure(SessionOnString.class),
-        "@Session на параметре String не привёл к ParameterResolutionException"
+        "@Session на параметре String не привёл к ExtensionConfigurationException"
     );
   }
 

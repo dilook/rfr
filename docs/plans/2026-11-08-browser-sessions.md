@@ -66,7 +66,7 @@ class InvitationBetweenSessionsTest {
 - **`SessionExtension`** (новый): `BeforeTestExecutionCallback` и `ParameterResolver`.
   - `beforeTestExecution()` проходит по параметрам тестового метода с `@Session` и для каждого:
     - проверяет сочетание. `UserSession` без `@User`, `@User GuestSession` и любой другой тип — это
-      `ParameterResolutionException` с параметром в тексте;
+      `ExtensionConfigurationException` с параметром в тексте: это ошибка настройки, а не подстановки параметра;
     - собирает фикстуру: `new GuestSessionFixture(contexts)` для гостя или
       `new UserSessionFixture(new GuestSessionFixture(contexts), UserExtension.user(context, index))` для пользователя;
     - кладёт фикстуру в Store по индексу параметра до `create()` (правило 2 `rfr-test-review`), затем вызывает
@@ -147,7 +147,7 @@ class InvitationBetweenSessionsTest {
      публикует `browser.contexts().size()` до закрытия браузера;
    - тайм-аут действия применён: `welcomePage().clickLogin()` на пустой странице падает с сообщением о тайм-ауте
      `TestConfig.actionTimeout()` (`Timeout 5000ms exceeded`), а не 30 000 мс по умолчанию;
-   - `UserSession` без `@User`, `@User GuestSession` и `@Session String` дают `ParameterResolutionException` с
+   - `UserSession` без `@User`, `@User GuestSession` и `@Session String` дают `ExtensionConfigurationException` с
      параметром в тексте;
    - `@Session` на параметре `@BeforeEach` даёт `ParameterResolutionException`;
    - `SessionExtension`, подключённый над классом, не открывает контекстов для теста без `@Session` и не роняет его

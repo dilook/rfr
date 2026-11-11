@@ -11,6 +11,7 @@ import io.student.rangiffler.session.fixture.GuestSessionFixture;
 import io.student.rangiffler.session.fixture.SessionFixture;
 import io.student.rangiffler.session.fixture.UserSessionFixture;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
@@ -70,7 +71,7 @@ public final class SessionExtension implements BeforeTestExecutionCallback, Para
     if (parameter.getType().equals(UserSession.class) && user) {
       return new UserSessionFixture(new GuestSessionFixture(() -> newContext(context)), UserExtension.user(context, index));
     }
-    throw new ParameterResolutionException(
+    throw new ExtensionConfigurationException(
         "@Session ставится на GuestSession без @User или на UserSession с @User, а стоит на " + parameter
     );
   }
