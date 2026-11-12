@@ -69,6 +69,23 @@ public class FriendshipBetweenSessionsTest {
   }
 
   @Test
+  @DisplayName("Отменённое приглашение пропадает из входящих у приглашённого")
+  void cancelledInvitationShouldDisappearFromInviteeIncomeInvitations(Page page, @Session @User(outcomeInvitations = 1) UserSession alice) {
+    TestUser invitee = alice.user().outcomeInvitations().getFirst();
+    PeoplePage invitations = alice.openMyTravels()
+        .goToPeople()
+        .clickOutcomeInvitationsTab();
+    invitations.table()
+        .row(invitee.username())
+        .clickCancel();
+    invitations.checkThatNotification(Notification.INVITATION_CANCELLED);
+    PeopleLogin.open(page, invitee)
+        .clickIncomeInvitationsTab()
+        .table()
+        .checkThatIsEmpty();
+  }
+
+  @Test
   @DisplayName("Друг, удалённый пользователем, перестаёт видеть его во вкладке Friends")
   void friendRemovedByUserShouldDisappearFromFormerFriendFriends(Page page, @Session @User(friends = 1) UserSession bob) {
     TestUser alice = bob.user().friends().getFirst();
