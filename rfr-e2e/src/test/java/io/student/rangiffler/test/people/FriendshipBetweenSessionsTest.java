@@ -12,6 +12,8 @@ import io.student.rangiffler.ui.page.PeoplePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 @UiTest
 public class FriendshipBetweenSessionsTest {
 
@@ -82,7 +84,7 @@ public class FriendshipBetweenSessionsTest {
     PeopleLogin.open(page, invitee)
         .clickIncomeInvitationsTab()
         .table()
-        .checkThatIsEmpty();
+        .checkThatRowsAre(List.of(alice.user().username()));
   }
 
   @Test
