@@ -34,12 +34,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,13 +57,17 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Образцы с одной GuestSession без @User и без входа в Page запускают настоящий Chromium без стенда; образцы с @User
  * нуждаются в MySQL, а образцы, которые входят через UI (UserSession или вход в Page), — в поднятом стенде. Playwright читает @UsePlaywright с самого внешнего класса теста, поэтому аннотация стоит и на
  * пробе. OpenContexts считает открытые контексты браузера в afterAll: он зарегистрирован после @UsePlaywright, поэтому
- * JUnit вызывает его раньше, чем Playwright закроет браузер.
+ * JUnit вызывает его раньше, чем Playwright закроет браузер. SessionExtension сохраняет трассы сессий упавших образцов,
+ * поэтому каталог трасс уводится во временный каталог каждого теста пробы, а не в build/traces.
  */
 @UsePlaywright(PlaywrightOptions.class)
 class SessionExtensionTest {
 
   private static final AuthUserDbClient AUTH_USER_DB_CLIENT = new AuthUserDbClient();
   private static final ApiUserDbClient API_USER_DB_CLIENT = new ApiUserDbClient();
+
+  @TempDir
+  private Path traces;
 
   @Test
   @DisplayName("GuestSession получает страницу в отдельном контексте, а не страницу @UsePlaywright")
@@ -243,23 +249,24 @@ class SessionExtensionTest {
     assertEquals("closed", closedAfterFailure(fixture), "GuestSessionFixture не закрылась после create(), не получившего контекст");
   }
 
-  private static EngineExecutionResults run(Class<?> sample) {
+  private EngineExecutionResults run(Class<?> sample) {
     return new IsolatedRun(
         EngineTestKit.engine("junit-jupiter")
             .selectors(DiscoverySelectors.selectClass(sample))
             .configurationParameter(ProbeTargetCondition.ENABLED, "true")
             // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
             .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
+            .configurationParameter("rfr.trace.dir", traces.toString())
     ).results();
   }
 
-  private static Map<String, String> entry(Class<?> sample) {
+  private Map<String, String> entry(Class<?> sample) {
     return run(sample).allEvents().reportingEntryPublished().stream()
         .flatMap(event -> event.getRequiredPayload(ReportEntry.class).getKeyValuePairs().entrySet().stream())
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  private static Throwable failure(Class<?> sample) {
+  private Throwable failure(Class<?> sample) {
     return run(sample).testEvents().failed().stream()
         .map(event -> event.getRequiredPayload(TestExecutionResult.class).getThrowable())
         .flatMap(Optional::stream)
