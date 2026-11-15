@@ -69,23 +69,29 @@ public final class SessionExtension implements BeforeTestExecutionCallback, Afte
   private static SessionFixture<?> fixture(Parameter parameter, int index, ExtensionContext context) {
     boolean user = parameter.isAnnotationPresent(User.class);
     if (parameter.getType().equals(GuestSession.class) && !user) {
-      return new GuestSessionFixture(() -> newContext(context, index));
+      return guest(context, index);
     }
     if (parameter.getType().equals(UserSession.class) && user) {
-      return new UserSessionFixture(new GuestSessionFixture(() -> newContext(context, index)), UserExtension.user(context, index));
+      return new UserSessionFixture(guest(context, index), UserExtension.user(context, index));
     }
     throw new ExtensionConfigurationException(
         "@Session ставится на GuestSession без @User или на UserSession с @User, а стоит на " + parameter
     );
   }
 
-  private static BrowserContext newContext(ExtensionContext extensionContext, int index) {
+  private static GuestSessionFixture guest(ExtensionContext test, int index) {
+    return new GuestSessionFixture(
+        () -> newContext(test),
+        created -> {
+          BrowserTimeoutExtension.configure(created);
+          TraceExtension.startTraceAndSaveToStore(test, "session-" + index, created);
+        }
+    );
+  }
+
+  private static BrowserContext newContext(ExtensionContext test) {
     Options options = new PlaywrightOptions().getOptions();
-    BrowserContext browserContext = BrowserExtension.getOrCreateBrowser(extensionContext)
-        .newContext(options.contextOptions.setBaseURL(options.baseUrl));
-    BrowserTimeoutExtension.configure(browserContext);
-    TraceExtension.startTraceAndSaveToStore(extensionContext, "session-" + index, browserContext);
-    return browserContext;
+    return BrowserExtension.getOrCreateBrowser(test).newContext(options.contextOptions.setBaseURL(options.baseUrl));
   }
 
   @Override

@@ -241,6 +241,16 @@ class SessionExtensionTest {
   }
 
   @Test
+  @DisplayName("close() закрывает контекст, если подготовка контекста упала")
+  void closeShouldCloseContextAfterFailedPreparation(Browser browser) {
+    int open = browser.contexts().size();
+    closedAfterFailure(new GuestSessionFixture(browser::newContext, created -> {
+      throw new ContextFailure();
+    }));
+    assertEquals(open, browser.contexts().size(), "После упавшей подготовки контекст сессии не закрыт");
+  }
+
+  @Test
   @DisplayName("close() не падает, если create() не получил контекст")
   void closeShouldNotFailWhenContextWasNotCreated() {
     SessionFixture<GuestSession> fixture = new GuestSessionFixture(() -> {
