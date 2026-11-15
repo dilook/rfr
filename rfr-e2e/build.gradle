@@ -13,6 +13,7 @@ def playwrightVersion = '1.63.0'
 def springVersion = '7.0.9'
 def springSecurityVersion = '7.1.1'
 def mysqlDriverVersion = '9.7.0'
+def flywayVersion = '12.4.0'
 
 configurations {
     agent {
@@ -32,7 +33,9 @@ dependencies {
     testImplementation "com.microsoft.playwright:playwright:$playwrightVersion"
     testImplementation "org.springframework:spring-jdbc:$springVersion"
     testImplementation "org.springframework.security:spring-security-crypto:$springSecurityVersion"
+    testImplementation "org.flywaydb:flyway-core:$flywayVersion"
     testRuntimeOnly "com.mysql:mysql-connector-j:$mysqlDriverVersion"
+    testRuntimeOnly "org.flywaydb:flyway-mysql:$flywayVersion"
 
     testImplementation "org.junit.jupiter:junit-jupiter"
     testImplementation "org.junit.platform:junit-platform-testkit"
@@ -48,11 +51,19 @@ allure {
     }
 }
 
-test {
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
     systemProperties providers.gradlePropertiesPrefixedBy('rfr.').get()
     jvmArgumentProviders.add({ ["-javaagent:${configurations.agent.singleFile}"] } as CommandLineArgumentProvider)
     outputs.upToDateWhen { false }
+}
+
+tasks.register('e2e', Test) {
+    group = 'verification'
+    description = 'Runs all rfr-e2e tests with rfr.stand.schema.check=true so StandSchemaExtension refuses a local MySQL whose schemas drift from the backend migrations of the current checkout; plain test, build and IDE runs skip the check'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    systemProperty 'rfr.stand.schema.check', 'true'
 }
 
 tasks.register('installPlaywright', JavaExec) {

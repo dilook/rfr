@@ -6,9 +6,9 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 
 ```bash
 ./gradlew :rfr-e2e:installPlaywright                      # один раз: браузер Chromium
-./gradlew e2e                                             # все тесты, прогоняются при каждом вызове
+./gradlew e2e                                             # все тесты со сверкой схем БД, прогоняются при каждом вызове
 ./gradlew e2e -Prfr.headless=false                        # с видимым браузером
-./gradlew :rfr-e2e:test --tests '*RegistrationTest'       # один класс
+./gradlew :rfr-e2e:test --tests '*RegistrationTest'       # один класс, без сверки схем БД
 ./gradlew :rfr-e2e:test --tests '*.jupiter.probe.*'       # тесты расширений, нужна только MySQL
 ./gradlew :rfr-e2e:allureReport                           # rfr-e2e/build/reports/allure-report/allureReport/index.html
 ```
@@ -16,6 +16,11 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 Стенд: MySQL `:3306`, `rfr-auth :9001`, `rfr-api :8081`, фронт `:3001` (см. корневой README).
 
 Тесты выполняются параллельно в 3 потока (`src/test/resources/junit-platform.properties`).
+
+Перед прогоном таски `e2e` `StandSchemaExtension` сверяет схемы `rangiffler-auth` и `rangiffler-api` локальной MySQL с
+Flyway-миграциями бэкендов текущего checkout'а и при расхождении не запускает тесты, а печатает команду, которая его
+устраняет: перезапуск бэкендов для неприменённых миграций или удаление разошедшейся схемы для остальных случаев.
+Таска `:rfr-e2e:test`, `./gradlew build` и запуск из IDE эту сверку пропускают.
 
 ## Конфигурация
 
@@ -30,6 +35,10 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 | `rfr.api.url` | `http://localhost:8081` |
 | `rfr.auth.jdbc.url` | `jdbc:mysql://localhost:3306/rangiffler-auth?serverTimezone=UTC` |
 | `rfr.api.jdbc.url` | `jdbc:mysql://localhost:3306/rangiffler-api?serverTimezone=UTC` |
+| `rfr.db.jdbc.url` | `jdbc:mysql://localhost:3306/?serverTimezone=UTC` — сервер без схемы, для временных схем проб |
+| `rfr.stand.schema.check` | `false`; таска `e2e` выставляет `true` |
+| `rfr.auth.migrations` | `filesystem:../rfr-auth/src/main/resources/db/migration/rangiffler-auth` |
+| `rfr.api.migrations` | `filesystem:../rfr-api/src/main/resources/db/migration/rangiffler-api` |
 | `rfr.db.username` / `rfr.db.password` | `root` / `secret` |
 | `rfr.headless` | `true` |
 
@@ -42,8 +51,8 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 | Пакет | Что лежит |
 |---|---|
 | `config` | `Config` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
-| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest` — тесты расширений через EngineTestKit) |
-| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
+| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, подключена через ServiceLoader), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
+| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient`, `MigrationDbClient` — Flyway validate одной схемы и команда исправления расхождения, `TemporarySchemaDbClient` — временная схема с каталогом миграций для проб |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
 | `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, `people` (друзья и приглашения), … |
