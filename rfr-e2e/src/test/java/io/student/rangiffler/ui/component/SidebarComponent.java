@@ -18,7 +18,7 @@ public final class SidebarComponent {
 
   @Step("Нажать People в боковом меню")
   public PeoplePage clickPeople() {
-    peopleLink.click();
+    page.waitForResponse(new GraphQlOperation("GetFriends"), peopleLink::click);
     return new PeoplePage(page);
   }
 }

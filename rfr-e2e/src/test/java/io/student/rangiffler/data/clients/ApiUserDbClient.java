@@ -7,6 +7,8 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
+
 public class ApiUserDbClient {
 
   private final JdbcTemplate jdbcTemplate;
@@ -46,6 +48,21 @@ public class ApiUserDbClient {
             + "(select id from `user` where username = ?), 'PENDING', now(6))",
         requester, addressee
     );
+  }
+
+  @Step("Найти дружбу в БД rangiffler-api: {requester} → {addressee} со статусом {status}")
+  public List<String> friendshipIds(String requester, String addressee, String status) {
+    return jdbcTemplate.queryForList(
+        "select BIN_TO_UUID(id, true) from `friendship` "
+            + "where requester_id = (select id from `user` where username = ?) "
+            + "and addressee_id = (select id from `user` where username = ?) and status = ?",
+        String.class, requester, addressee, status
+    );
+  }
+
+  @Step("Проверить, есть ли дружба в БД rangiffler-api: {id}")
+  public boolean friendshipExists(String id) {
+    return jdbcTemplate.queryForObject("select count(*) from `friendship` where id = UUID_TO_BIN(?, true)", Integer.class, id) > 0;
   }
 
   @Step("Проверить, есть ли пользователь в БД rangiffler-api: {username}")

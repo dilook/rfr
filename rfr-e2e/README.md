@@ -42,8 +42,8 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 | Пакет | Что лежит |
 |---|---|
 | `config` | `Config` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
-| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends` и `incomeInvitations`, `@ProbeTarget`), `extension` (`UserExtension`), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest` — тесты расширений через EngineTestKit) |
-| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
+| `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest` — тесты расширений через EngineTestKit) |
+| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient` |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
 | `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, `people` (друзья и приглашения), … |
@@ -52,8 +52,8 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 
 ## Тесты расширений
 
-Тест в `jupiter/probe` запускает вложенные классы-образцы через `EngineTestKit` и проверяет события запуска и БД после
-закрытия Store. Образцы помечены `@ProbeTarget`: в обычном прогоне они отключены и видны в отчёте как skipped,
+Тест в `jupiter/probe` запускает вложенные классы-образцы через `EngineTestKit` и проверяет события запуска и состояние после
+закрытия Store: БД для `@User`, очередь пула для `@StaticUser`. Образцы помечены `@ProbeTarget`: в обычном прогоне они отключены и видны в отчёте как skipped,
 а EngineTestKit включает их параметром `probe.enabled=true`. Что образец получил от расширения, он
 публикует через `TestReporter`.
 
