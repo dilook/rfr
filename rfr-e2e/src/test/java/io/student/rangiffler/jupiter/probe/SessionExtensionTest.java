@@ -41,11 +41,14 @@ import org.junit.platform.engine.reporting.ReportEntry;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -251,6 +254,18 @@ class SessionExtensionTest {
   }
 
   @Test
+  @DisplayName("Трасса сессии сохраняется, даже если остановка трассы предыдущей сессии упала")
+  void sessionTraceShouldBeSavedWhenPreviousSessionTraceFails() throws IOException {
+    run(FailedWithClosedSession.class);
+    try (Stream<Path> files = Files.list(traces)) {
+      assertTrue(
+          files.anyMatch(file -> file.getFileName().toString().endsWith("-session-1.zip")),
+          "Трасса второй сессии потерялась из-за упавшей остановки трассы первой"
+      );
+    }
+  }
+
+  @Test
   @DisplayName("close() не падает, если create() не получил контекст")
   void closeShouldNotFailWhenContextWasNotCreated() {
     SessionFixture<GuestSession> fixture = new GuestSessionFixture(() -> {
@@ -367,6 +382,18 @@ class SessionExtensionTest {
     @Test
     void test(@Session GuestSession guest) {
       guest.page().setContent("<p>Probe</p>");
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  static class FailedWithClosedSession {
+
+    @Test
+    void test(@Session GuestSession closed, @Session GuestSession open) {
+      open.page().setContent("<p>Probe</p>");
+      closed.page().context().close();
+      fail("Образец падает намеренно");
     }
   }
 
