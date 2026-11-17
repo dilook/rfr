@@ -17,6 +17,7 @@ import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import io.student.rangiffler.jupiter.extension.BrowserTimeoutExtension;
 import io.student.rangiffler.jupiter.extension.PlaywrightOptions;
 import io.student.rangiffler.jupiter.extension.SessionExtension;
+import io.student.rangiffler.jupiter.extension.TraceExtension;
 import io.student.rangiffler.jupiter.extension.UserExtension;
 import io.student.rangiffler.session.GuestSession;
 import io.student.rangiffler.session.UserSession;
@@ -254,6 +255,15 @@ class SessionExtensionTest {
   }
 
   @Test
+  @DisplayName("Без TraceExtension трасса сессии упавшего теста не сохраняется")
+  void sessionTraceShouldNotBeSavedWithoutTraceExtension() throws IOException {
+    run(FailedGuestSession.class);
+    try (Stream<Path> files = Files.list(traces)) {
+      assertEquals(0L, files.count(), "Трасса сессии сохранена, хотя TraceExtension у теста не подключён");
+    }
+  }
+
+  @Test
   @DisplayName("Трасса сессии сохраняется, даже если остановка трассы предыдущей сессии упала")
   void sessionTraceShouldBeSavedWhenPreviousSessionTraceFails() throws IOException {
     run(FailedWithClosedSession.class);
@@ -387,6 +397,7 @@ class SessionExtensionTest {
 
   @ProbeTarget
   @UsePlaywright(PlaywrightOptions.class)
+  @ExtendWith(TraceExtension.class)
   static class FailedWithClosedSession {
 
     @Test

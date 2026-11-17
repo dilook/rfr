@@ -23,7 +23,9 @@ import java.util.Optional;
  * BrowserTimeoutExtension; Playwright закрывает его в колбэках TestWatcher, которые JUnit
  * вызывает после afterEach, поэтому трасса останавливается на ещё живом контексте. Трассы контекстов сессий запускает и
  * останавливает SessionExtension, потому что только он знает, когда эти контексты создаются и какие параметры их
- * получили, а хранение и сохранение остаются здесь, чтобы он не зависел от устройства Store. Начатая трассировка
+ * получили, а хранение и сохранение остаются здесь, чтобы он не зависел от устройства Store. Трасса сессии
+ * запускается, только если в Store уже лежит трасса теста: JUnit не говорит, какие extension'ы подключены, а трасса
+ * теста появляется в beforeEach, раньше сессий, и есть только там, где подключён этот extension. Начатая трассировка
  * кладётся в Store теста под меткой: если предыдущий колбэк упал и трассировка не началась, остановка не создаёт
  * контекст заново и не добавляет своих ошибок к исходной. Метки контекста теста и сессий не пересекаются при любом
  * порядке параметров и разводят файлы и вложения одного теста. Каталог трасс сначала ищется в параметрах конфигурации
@@ -36,7 +38,7 @@ public final class TraceExtension implements BeforeEachCallback, AfterEachCallba
 
   @Override
   public void beforeEach(ExtensionContext context) {
-    startTraceAndSaveToStore(context, "test", BrowserContextExtension.getOrCreateBrowserContext(context));
+    start(context, "test", BrowserContextExtension.getOrCreateBrowserContext(context));
   }
 
   @Override
@@ -45,6 +47,12 @@ public final class TraceExtension implements BeforeEachCallback, AfterEachCallba
   }
 
   public static void startTraceAndSaveToStore(ExtensionContext extensionContext, String label, BrowserContext browserContext) {
+    if (extensionContext.getStore(NAMESPACE).get("test", Tracing.class) != null) {
+      start(extensionContext, label, browserContext);
+    }
+  }
+
+  private static void start(ExtensionContext extensionContext, String label, BrowserContext browserContext) {
     Tracing tracing = browserContext.tracing();
     tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true));
     extensionContext.getStore(NAMESPACE).put(label, tracing);
