@@ -17,7 +17,7 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 
 Тесты выполняются параллельно в 3 потока (`src/test/resources/junit-platform.properties`).
 
-Перед прогоном таски `e2e` `StandReadinessExtension` ждёт, пока MySQL не выполнит `SELECT 1`, а `rfr-auth`, `rfr-api` и
+Перед первым классом с тегом `ui` в прогоне таски `e2e` `StandReadinessExtension` ждёт, пока MySQL не выполнит `SELECT 1`, а `rfr-auth`, `rfr-api` и
 фронт не ответят по тем же признакам, что `scripts/wait-for-stand.sh`: опрос раз в 2 с, каждая попытка не дольше 5 с и
 не дольше остатка срока, сначала по имени хоста, затем, для `http`, по каждому его адресу (`localhost` — это и
 `127.0.0.1`, и `::1`: Vite слушает только IPv6), всего не дольше `rfr.standTimeout`. Таймаут ограничивает соединение и
@@ -27,7 +27,7 @@ E2E-тесты Rangiffler: JUnit 6.1.3, Playwright Java 1.63 (`@UsePlaywright`),
 UI-тест из IDE при выключенном фронте падает с этой ошибкой, а не по таймауту Playwright; чтобы узнать об этом быстрее
 180 с, добавьте `-Prfr.standTimeout=10` в Gradle-конфигурацию запуска IDE. Таска `e2e` запускает только классы с тегом
 `ui`; у проб `jupiter/probe` этого тега нет, поэтому и из IDE их запускают через `:rfr-e2e:test`, а не через `e2e`.
-Таска `:rfr-e2e:test` и `./gradlew build` стенд не ждут.
+Таска `:rfr-e2e:test` и `./gradlew build` стенд не ждут, как и классы без тега `ui` в любой таске.
 
 Затем `StandSchemaExtension` сверяет схемы `rangiffler-auth` и `rangiffler-api` локальной MySQL с
 Flyway-миграциями бэкендов текущего checkout'а и при расхождении не запускает тесты, а печатает команду, которая его
@@ -75,7 +75,8 @@ extension'ов, стоящих после упавшего, поэтому `Allu
 |---|---|
 | `config` | `TestConfig` — единственная точка чтения настроек; `PlaywrightOptions` — опции браузера для `@UsePlaywright` |
 | `jupiter` | всё про JUnit: `annotation` (`@User` с `friends`, `incomeInvitations` и `outcomeInvitations`, `@StaticUser`, `@ProbeTarget`), `extension` (`UserExtension`, `UsersQueueExtension`; `SuiteExtension` — extension уровня всего прогона, его исполняет `SuiteRun` из корневого Store; `AllureEnvironmentExtension` — окружение прогона в отчёте Allure, `StandReadinessExtension` — ожидание стенда и `StandSchemaExtension` — сверка схем БД с миграциями бэкендов, все подключены через ServiceLoader именно в этом порядке), `condition` (`ProbeTargetCondition` — класс-образец выполняется только из EngineTestKit), `probe` (`UserExtensionTest`, `UsersQueueExtensionTest`, `SuiteExtensionTest`, `StandReadinessExtensionTest`, `AllureEnvironmentExtensionTest` — тесты расширений через EngineTestKit; `MigrationDbClientTest` — сверка схемы на временной схеме MySQL) |
-| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient`, `MigrationDbClient` — Flyway validate одной схемы и команда исправления расхождения, `TemporarySchemaDbClient` — временная схема с каталогом миграций для проб; `StandService` — готовность одного сервиса стенда: `JdbcStandService` (JDBC-подключение выполняет `SELECT 1`), `HttpStandService` (подходящий HTTP-статус) |
+| `data` | тестовые данные и их владельцы: `TestUser`, `UserRequest` — описание пользователя из `@User`, собирает цепочку `UserFixture`; `UserFixture` и её реализации: `SingleUserFixture` и декораторы `UserWithFriendsFixture`, `UserWithIncomeInvitationsFixture`, `UserWithOutcomeInvitationsFixture`; `StaticUserFixture` — пользователь из общего пула, берётся из очереди и возвращается в неё; `clients` — `AuthUserDbClient`, `ApiUserDbClient`, `MigrationDbClient` — Flyway validate одной схемы и команда исправления расхождения, `TemporarySchemaDbClient` — временная схема с каталогом миграций для проб |
+| `stand` | стенд под тестами: `Stand` ждёт готовности всех сервисов стенда до общего срока, `StandService` — готовность одного сервиса: `JdbcStandService` (JDBC-подключение выполняет `SELECT 1`), `HttpStandService` (подходящий HTTP-статус) |
 | `utils` | статические утилиты без состояния: `RandomDataUtils` — случайные username/password; сюда же будущие генераторы (описания фото и т.п.) |
 | `ui` | `page` — Page Objects, `component` — общие части страниц |
 | `test` | только тесты, по фичам: `auth` (вход), `web` (регистрация), `profile`, `people` (друзья и приглашения), … |

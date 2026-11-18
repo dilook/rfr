@@ -13,7 +13,7 @@
 
 ## Архитектура проекта
 
-- Структура пакетов — `rfr-e2e/README.md`, раздел «Архитектура»: `config`, `jupiter`, `data`, `utils`, `ui`, `test`. Новые классы кладутся в существующие пакеты.
+- Структура пакетов — `rfr-e2e/README.md`, раздел «Архитектура»: `config`, `jupiter`, `data`, `stand`, `utils`, `ui`, `test`. Новые классы кладутся в существующие пакеты.
 - Готовый пользователь — параметр `@User TestUser user` (аннотация в `jupiter/annotation` сама подключает `jupiter/extension/UserExtension`); связи — атрибуты `friends`, `incomeInvitations`, `outcomeInvitations`, связанные пользователи — в одноимённых списках `TestUser`.
 - Пользователь из пула заранее заведённых — параметр `@StaticUser TestUser user` (`UsersQueueExtension`, `StaticUserFixture`): берётся из общей очереди с таймаутом и возвращается в неё после теста; в БД ничего не создаётся и не удаляется.
 - `UserExtension` кладёт `UserFixture` в `ExtensionContext.Store` до `create()`, и JUnit сам закрывает её после теста, даже упавшего или с ошибкой в `beforeEach`; `AfterEachCallback` не нужен.
