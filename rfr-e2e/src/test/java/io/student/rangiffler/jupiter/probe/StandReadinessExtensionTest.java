@@ -50,6 +50,25 @@ class StandReadinessExtensionTest {
   private static final String JDBC = "probe.stand.jdbc";
 
   @Test
+  @DisplayName("Проверка стенда выполняется один раз на прогон, сколько бы UI-классов в нём ни было")
+  void checkShouldRunOnceForAllUiClasses() throws IOException {
+    try (FakeService oneClassService = new FakeService(Duration.ZERO).start();
+         FakeService twoClassService = new FakeService(Duration.ZERO).start()) {
+      EngineExecutionResults oneClassRun = run(oneClassService.url(), "true", "1", TestConfig.dbJdbcUrl(), Guarded.class);
+      EngineExecutionResults twoClassRun = run(twoClassService.url(), "true", "1", TestConfig.dbJdbcUrl(), Guarded.class, Second.class);
+      assertEquals(
+          List.of(1L, 2L, oneClassService.hits()),
+          List.of(
+              oneClassRun.testEvents().succeeded().count(),
+              twoClassRun.testEvents().succeeded().count(),
+              twoClassService.hits()
+          ),
+          "Проверка стенда запускается не один раз перед запуском всех тестов или образцы не выполнились успешно"
+      );
+    }
+  }
+
+  @Test
   @DisplayName("Сервис начал отвечать через 2 с — тесты выполняются")
   void testsShouldRunWhenServiceAnswersLate() throws IOException {
     try (FakeService service = new FakeService(Duration.ofSeconds(2)).start()) {
@@ -172,7 +191,7 @@ class StandReadinessExtensionTest {
       assertEquals(
           List.of(1L, 0),
           List.of(
-              run(Untagged.class, service.url(), "true", "1", TestConfig.dbJdbcUrl()).testEvents().succeeded().count(),
+              run(service.url(), "true", "1", TestConfig.dbJdbcUrl(), Untagged.class).testEvents().succeeded().count(),
               service.hits()
           ),
           "Класс без тега ждал стенд или образец не выполнился"
@@ -185,12 +204,12 @@ class StandReadinessExtensionTest {
   }
 
   private static EngineExecutionResults run(String url, String check, String timeout, String jdbcUrl) {
-    return run(Guarded.class, url, check, timeout, jdbcUrl);
+    return run(url, check, timeout, jdbcUrl, Guarded.class);
   }
 
-  private static EngineExecutionResults run(Class<?> target, String url, String check, String timeout, String jdbcUrl) {
+  private static EngineExecutionResults run(String url, String check, String timeout, String jdbcUrl, Class<?>... target) {
     return EngineTestKit.engine("junit-jupiter")
-        .selectors(DiscoverySelectors.selectClass(target))
+        .selectors(DiscoverySelectors.selectClasses(target))
         .configurationParameter(ProbeTargetCondition.ENABLED, "true")
         // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
@@ -395,6 +414,16 @@ class StandReadinessExtensionTest {
     private String parameter(ExtensionContext context, String key) {
       return context.getConfigurationParameter(key)
           .orElseThrow(() -> new IllegalStateException("Проба не передала образцу параметр " + key));
+    }
+  }
+
+  @ProbeTarget
+  @Tag("probe-stand")
+  @ExtendWith(StubbedStand.class)
+  static class Second {
+
+    @Test
+    void test() {
     }
   }
 
