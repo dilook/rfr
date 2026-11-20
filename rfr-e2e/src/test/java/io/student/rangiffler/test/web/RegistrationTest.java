@@ -1,18 +1,15 @@
 package io.student.rangiffler.test.web;
 
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.junit.UsePlaywright;
-import io.student.rangiffler.config.PlaywrightOptions;
-import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.data.SingleUserFixture;
+import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-@Tag("ui")
-@UsePlaywright(PlaywrightOptions.class)
+@UiTest
 public class RegistrationTest {
 
   private final TestUser user = TestUser.unique();

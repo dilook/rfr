@@ -1,6 +1,6 @@
 ## Конфигурация
 
-- UI-тесты на Playwright Java: классы помечаются `@Tag("ui")` и `@UsePlaywright(PlaywrightOptions.class)`, `Page` приходит параметром теста. Таска `e2e` запускает только классы с тегом `ui`: без него UI-тест в `e2e` не попадёт.
+- UI-тесты на Playwright Java: классы помечаются `@UiTest` (`jupiter/annotation`; внутри `@Tag("ui")`, `@UsePlaywright(PlaywrightOptions.class)` и `BrowserTimeoutExtension` — тайм-ауты Playwright: действий `rfr.action.timeout`, 5 с, и переходов `rfr.navigation.timeout`, 30 с), `Page` приходит параметром теста. Таска `e2e` запускает только классы с тегом `ui`: без `@UiTest` UI-тест в `e2e` не попадёт.
 - Настройки — `config/TestConfig`:system property `rfr.<key>` → env `RFR_<KEY>` → default; из Gradle — `-Prfr.<key>=…`. Подробности — `rfr-e2e/README.md`.
 
 ## Создание Page Objects
