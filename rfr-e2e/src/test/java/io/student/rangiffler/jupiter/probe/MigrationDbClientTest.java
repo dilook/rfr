@@ -1,19 +1,25 @@
 package io.student.rangiffler.jupiter.probe;
 
+import io.student.rangiffler.data.clients.MigrationDbClient;
 import io.student.rangiffler.data.clients.TemporarySchemaDbClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Проверяет сверку схемы с миграциями бэкенда на временной схеме локальной MySQL, которую накатывает и удаляет
- * TemporarySchemaDbClient.
+ * TemporarySchemaDbClient, и то, что версия схемы не ждёт без срока базу, которая приняла соединение и молчит.
  */
 class MigrationDbClientTest {
 
@@ -66,6 +72,25 @@ class MigrationDbClientTest {
       assertTrue(
           schema.migrations().drift().orElse("").contains("DROP DATABASE `migration_probe_"),
           "Изменённый файл применённой миграции не попросил удалить схему"
+      );
+    }
+  }
+
+  @Test
+  @DisplayName("MySQL приняла соединение и молчит — версия схемы unavailable, а не ожидание без срока")
+  void versionShouldBeUnavailableWhenDatabaseStaysSilent(@TempDir Path dir) throws IOException {
+    try (ServerSocket silent = new ServerSocket(0, 50, InetAddress.getLoopbackAddress())) {
+      assertEquals(
+          "unavailable",
+          assertTimeoutPreemptively(
+              Duration.ofSeconds(15),
+              () -> new MigrationDbClient(
+                  "jdbc:mysql://" + silent.getInetAddress().getHostAddress() + ":" + silent.getLocalPort() + "/",
+                  "silent_probe",
+                  "filesystem:" + dir
+              ).version()
+          ),
+          "Версия схемы молчащей базы не unavailable или ждала её дольше 15 с"
       );
     }
   }

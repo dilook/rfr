@@ -1,17 +1,18 @@
 package io.student.rangiffler.config;
 
+import java.time.Duration;
 import java.util.Locale;
 
 /**
  * Значение ищется по порядку: system property {@code rfr.<key>}, переменная окружения {@code RFR_<KEY>}, default.
  * Например, {@code front.url} → {@code -Drfr.front.url} / {@code RFR_FRONT_URL}.
  */
-public final class Config {
+public final class TestConfig {
 
   private static final String PROPERTY_PREFIX = "rfr.";
   private static final String ENV_PREFIX = "RFR_";
 
-  private Config() {
+  private TestConfig() {
   }
 
   public static String frontUrl() {
@@ -42,6 +43,14 @@ public final class Config {
     return Boolean.parseBoolean(get("stand.schema.check", "false"));
   }
 
+  public static boolean standCheck() {
+    return Boolean.parseBoolean(get("standCheck", "false"));
+  }
+
+  public static Duration standTimeout() {
+    return Duration.ofSeconds(Long.parseLong(get("standTimeout", "180")));
+  }
+
   public static String authMigrations() {
     return get("auth.migrations", "filesystem:../rfr-auth/src/main/resources/db/migration/rangiffler-auth");
   }
@@ -60,6 +69,10 @@ public final class Config {
 
   public static boolean headless() {
     return Boolean.parseBoolean(get("headless", "true"));
+  }
+
+  public static String commit() {
+    return get("commit", "unknown");
   }
 
   private static String get(String key, String defaultValue) {

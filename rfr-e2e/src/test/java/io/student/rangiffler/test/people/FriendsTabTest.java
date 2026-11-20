@@ -8,10 +8,12 @@ import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.ui.page.PeoplePage;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+@Tag("ui")
 @UsePlaywright(PlaywrightOptions.class)
 public class FriendsTabTest {
 

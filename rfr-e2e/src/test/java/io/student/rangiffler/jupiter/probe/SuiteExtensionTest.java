@@ -172,7 +172,7 @@ class SuiteExtensionTest {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(Arrays.stream(samples).map(DiscoverySelectors::selectClass).toList())
         .configurationParameter(ProbeTargetCondition.ENABLED, "true")
-        // Автоопределение подключило бы к образцам extension'ы из ServiceLoader (AllureJupiter, StandSchemaExtension).
+        // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
         .configurationParameter("junit.jupiter.execution.parallel.enabled", "true")
         .configurationParameter("junit.jupiter.execution.parallel.mode.default", "concurrent")

@@ -51,18 +51,37 @@ allure {
     }
 }
 
+def commit = providers.gradleProperty('rfr.commit').orElse(
+    providers.exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        ignoreExitValue = true
+    }.standardOutput.asText.map { it.trim() ?: 'unknown' }
+)
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
     systemProperties providers.gradlePropertiesPrefixedBy('rfr.').get()
     jvmArgumentProviders.add({ ["-javaagent:${configurations.agent.singleFile}"] } as CommandLineArgumentProvider)
+    jvmArgumentProviders.add({ ["-Drfr.commit=${commit.get()}"] } as CommandLineArgumentProvider)
     outputs.upToDateWhen { false }
+}
+
+tasks.register('waitForStand', Exec) {
+    group = 'verification'
+    description = 'Waits until MySQL, rfr-auth, rfr-api and the front respond'
+    workingDir = rootProject.projectDir
+    commandLine 'bash', 'scripts/wait-for-stand.sh'
 }
 
 tasks.register('e2e', Test) {
     group = 'verification'
-    description = 'Runs all rfr-e2e tests with rfr.stand.schema.check=true so StandSchemaExtension refuses a local MySQL whose schemas drift from the backend migrations of the current checkout; plain test, build and IDE runs skip the check'
+    description = 'Runs only the rfr-e2e UI tests tagged ui, also from the IDE through e2e --tests, while the extension probes stay in test; with rfr.standCheck=true, so StandReadinessExtension waits up to rfr.standTimeout for MySQL, rfr-auth, rfr-api and the front, and with rfr.stand.schema.check=true, so StandSchemaExtension then refuses a local MySQL whose schemas drift from the backend migrations of the current checkout; plain test and build runs skip both checks'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'ui'
+    }
+    systemProperty 'rfr.standCheck', 'true'
     systemProperty 'rfr.stand.schema.check', 'true'
 }
 

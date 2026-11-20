@@ -2,13 +2,13 @@ package io.student.rangiffler.ui.page;
 
 import com.microsoft.playwright.Page;
 import io.qameta.allure.Step;
-import io.student.rangiffler.config.Config;
+import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.ui.component.HeaderComponent;
 import io.student.rangiffler.ui.component.SidebarComponent;
 
 public final class MyTravelsPage {
 
-  public static final String URL = Config.frontUrl() + "/my-travels";
+  public static final String URL = TestConfig.frontUrl() + "/my-travels";
 
   private final Page page;
   private final HeaderComponent header;
