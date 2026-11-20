@@ -48,13 +48,13 @@ public final class PeoplePage {
 
   @Step("Открыть вкладку Outcome invitations")
   public PeoplePage clickOutcomeInvitationsTab() {
-    page.waitForResponse(new GraphQlOperation("GetOutcomeInvitations"), outcomeInvitationsTab::click);
+    select(outcomeInvitationsTab, "GetOutcomeInvitations");
     return this;
   }
 
   @Step("Открыть вкладку Income invitations")
   public PeoplePage clickIncomeInvitationsTab() {
-    page.waitForResponse(new GraphQlOperation("GetInvitations"), incomeInvitationsTab::click);
+    select(incomeInvitationsTab, "GetInvitations");
     return this;
   }
 
@@ -67,5 +67,12 @@ public final class PeoplePage {
 
   public PeopleTable table() {
     return table;
+  }
+
+  // MUI Tab не вызывает onChange для уже выбранной вкладки: запроса не будет, и waitForResponse ждал бы до таймаута
+  private void select(Locator tab, String operation) {
+    if (!"true".equals(tab.getAttribute("aria-selected"))) {
+      page.waitForResponse(new GraphQlOperation(operation), tab::click);
+    }
   }
 }
