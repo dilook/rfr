@@ -12,7 +12,7 @@ export const FriendsTable = () => {
         setPage(0);
     }
 
-    const {data, error, hasNextPage, hasPreviousPage, refetch} = useGetFriends({page, search});
+    const {data, loading, error, hasNextPage, hasPreviousPage, refetch} = useGetFriends({page, search});
 
     const onSearchSubmit = () => {
         refetch();
@@ -23,6 +23,7 @@ export const FriendsTable = () => {
         <QueryErrorAlert error={error} onRetry={() => refetch()}/>
         <PeopleTable
             data={data}
+            loading={loading}
             page={page}
             setPage={setPage}
             hasNextPage={hasNextPage}

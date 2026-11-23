@@ -91,6 +91,10 @@ public final class TestConfig {
     return get("commit", "unknown");
   }
 
+  public static String traceDir() {
+    return get("trace.dir", "build/traces");
+  }
+
   private static String get(String key, String defaultValue) {
     String property = System.getProperty(PROPERTY_PREFIX + key);
     if (property != null && !property.isBlank()) {

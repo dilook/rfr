@@ -2,7 +2,6 @@ package io.student.rangiffler.ui.page;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Response;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
@@ -29,6 +28,7 @@ public final class ProfilePage {
   private final Locator avatarImage;
   private final Locator saveButton;
   private final Locator resetButton;
+  private final Locator savedMessage;
 
   public ProfilePage(Page page) {
     this.page = page;
@@ -42,6 +42,8 @@ public final class ProfilePage {
     this.avatarImage = main.getByRole(AriaRole.IMG, new Locator.GetByRoleOptions().setName("").setExact(true));
     this.saveButton = main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save").setExact(true));
     this.resetButton = main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Reset").setExact(true));
+    this.savedMessage = page.getByRole(AriaRole.ALERT)
+        .filter(new Locator.FilterOptions().setHasText("Your profile is successfully updated"));
   }
 
   @Step("Открыть профиль без входа")
@@ -87,9 +89,9 @@ public final class ProfilePage {
     return this;
   }
 
-  @Step("Нажать Save и дождаться ответа UpdateUser")
+  @Step("Нажать Save")
   public ProfilePage clickSave() {
-    page.waitForResponse(ProfilePage::isUpdateUserResponse, saveButton::click);
+    saveButton.click();
     return this;
   }
 
@@ -102,6 +104,12 @@ public final class ProfilePage {
   @Step("Перезагрузить страницу профиля")
   public ProfilePage reload() {
     page.reload();
+    return this;
+  }
+
+  @Step("Проверить, что появилось сообщение об успешном сохранении профиля")
+  public ProfilePage checkThatProfileIsSaved() {
+    assertThat(savedMessage).isVisible();
     return this;
   }
 
@@ -142,12 +150,5 @@ public final class ProfilePage {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  private static boolean isUpdateUserResponse(Response response) {
-    String body = response.request().postData();
-    return response.url().equals(TestConfig.apiUrl() + "/graphql")
-        && body != null
-        && body.contains("\"operationName\":\"UpdateUser\"");
   }
 }

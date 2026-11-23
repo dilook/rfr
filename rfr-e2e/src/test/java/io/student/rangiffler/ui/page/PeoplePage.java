@@ -5,7 +5,6 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
-import io.student.rangiffler.ui.component.GraphQlOperation;
 import io.student.rangiffler.ui.component.PeopleTable;
 
 public final class PeoplePage {
@@ -48,13 +47,13 @@ public final class PeoplePage {
 
   @Step("Открыть вкладку Outcome invitations")
   public PeoplePage clickOutcomeInvitationsTab() {
-    select(outcomeInvitationsTab, "GetOutcomeInvitations");
+    outcomeInvitationsTab.click();
     return this;
   }
 
   @Step("Открыть вкладку Income invitations")
   public PeoplePage clickIncomeInvitationsTab() {
-    select(incomeInvitationsTab, "GetInvitations");
+    incomeInvitationsTab.click();
     return this;
   }
 
@@ -67,12 +66,5 @@ public final class PeoplePage {
 
   public PeopleTable table() {
     return table;
-  }
-
-  // MUI Tab не вызывает onChange для уже выбранной вкладки: запроса не будет, и waitForResponse ждал бы до таймаута
-  private void select(Locator tab, String operation) {
-    if (!"true".equals(tab.getAttribute("aria-selected"))) {
-      page.waitForResponse(new GraphQlOperation(operation), tab::click);
-    }
   }
 }

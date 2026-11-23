@@ -39,15 +39,15 @@ public final class PeopleTable {
 
   @Step("Проверить, что таблица людей пуста и нет ошибки загрузки")
   public PeopleTable checkThatIsEmpty() {
+    assertThat(noPeopleMessage).isVisible();
     assertThat(errorAlert).hasCount(0);
     assertThat(rows).hasCount(0);
-    assertThat(noPeopleMessage).isVisible();
     return this;
   }
 
   private Locator rowOf(String username) {
     return rows.filter(new Locator.FilterOptions().setHas(
-        page.getByRole(AriaRole.CELL, new Page.GetByRoleOptions().setName(username).setExact(true))
+        page.getByText(username, new Page.GetByTextOptions().setExact(true))
     ));
   }
 }

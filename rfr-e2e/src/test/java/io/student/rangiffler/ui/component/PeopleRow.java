@@ -18,7 +18,7 @@ public final class PeopleRow {
 
   @Step("Нажать Add в строке {this.username}")
   public PeopleRow clickAdd() {
-    row.page().waitForResponse(new GraphQlOperation("FriendshipAction"), button("Add")::click);
+    button("Add").click();
     return this;
   }
 

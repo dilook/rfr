@@ -11,7 +11,7 @@ export const OutcomeInvitationsTable = () => {
         setSearch(value);
         setPage(0);
     }
-    const {data, error, hasNextPage, hasPreviousPage, refetch} = useGetOutcomeInvitations({page, search});
+    const {data, loading, error, hasNextPage, hasPreviousPage, refetch} = useGetOutcomeInvitations({page, search});
 
     const onSearchSubmit = () => {
         refetch();
@@ -22,6 +22,7 @@ export const OutcomeInvitationsTable = () => {
         <QueryErrorAlert error={error} onRetry={() => refetch()}/>
         <PeopleTable
             data={data}
+            loading={loading}
             page={page}
             setPage={setPage}
             hasNextPage={hasNextPage}
