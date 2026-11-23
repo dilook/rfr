@@ -1,5 +1,10 @@
 package io.student.rangiffler.data;
 
+import io.student.rangiffler.data.fixture.SingleUserFixture;
+import io.student.rangiffler.data.fixture.UserFixture;
+import io.student.rangiffler.data.fixture.UserWithFriendsFixture;
+import io.student.rangiffler.data.fixture.UserWithIncomeInvitationsFixture;
+import io.student.rangiffler.data.fixture.UserWithOutcomeInvitationsFixture;
 import io.student.rangiffler.jupiter.annotation.User;
 
 /**

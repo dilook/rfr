@@ -1,4 +1,4 @@
-package io.student.rangiffler.data;
+package io.student.rangiffler.data.fixture;
 
 import java.util.List;
 import java.util.function.Consumer;

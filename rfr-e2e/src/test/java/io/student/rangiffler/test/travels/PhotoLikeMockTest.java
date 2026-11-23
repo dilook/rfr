@@ -4,6 +4,7 @@ import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
+import io.student.rangiffler.ui.component.Notification;
 import io.student.rangiffler.ui.page.MyTravelsPage;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +24,7 @@ public class PhotoLikeMockTest {
   void likeShouldShowSuccessMessage(@User TestUser user, Page page) {
     MyTravelsPage travels = openMyTravels(user, page);
     travels.photo(PHOTO).clickLike();
-    travels.checkThatLikeIsConfirmed();
+    travels.checkThatNotification(Notification.POST_LIKED);
   }
 
   @Test

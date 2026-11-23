@@ -1,21 +1,26 @@
 package io.student.rangiffler.jupiter.probe;
 
-import io.student.rangiffler.data.SingleUserFixture;
+import io.student.rangiffler.data.fixture.SingleUserFixture;
 import io.student.rangiffler.data.TestUser;
-import io.student.rangiffler.data.UserFixture;
-import io.student.rangiffler.data.UserWithFriendsFixture;
-import io.student.rangiffler.data.UserWithIncomeInvitationsFixture;
-import io.student.rangiffler.data.UserWithOutcomeInvitationsFixture;
+import io.student.rangiffler.data.fixture.UserFixture;
+import io.student.rangiffler.data.fixture.UserWithFriendsFixture;
+import io.student.rangiffler.data.fixture.UserWithIncomeInvitationsFixture;
+import io.student.rangiffler.data.fixture.UserWithOutcomeInvitationsFixture;
 import io.student.rangiffler.data.clients.ApiUserDbClient;
 import io.student.rangiffler.data.clients.AuthUserDbClient;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;
 import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
+import io.student.rangiffler.jupiter.extension.UserExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestReporter;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.engine.reporting.ReportEntry;
@@ -31,6 +36,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 class UserExtensionTest {
@@ -233,6 +239,33 @@ class UserExtensionTest {
     );
   }
 
+  @Test
+  @DisplayName("Пользователь из @User на параметре другого типа есть в обеих БД во время теста и доступен через UserExtension.user()")
+  void userOnOtherTypeShouldExistInBothDatabasesDuringTest() {
+    Map<String, String> entry = entry(UserOnOtherType.class);
+    assertEquals(
+        List.of("true", "true"),
+        List.of(entry.get("auth"), entry.get("api")),
+        "Пользователя из @User на параметре другого типа нет в rangiffler-auth или rangiffler-api во время теста"
+    );
+  }
+
+  @Test
+  @DisplayName("Пользователь из @User на параметре другого типа удаляется из обеих БД после теста")
+  void userOnOtherTypeShouldBeDeletedAfterTest() {
+    String username = entry(UserOnOtherType.class).get("username");
+    assertEquals(List.of(), existing(List.of(username)), "Пользователь из @User на параметре другого типа не удалён после теста");
+  }
+
+  @Test
+  @DisplayName("UserExtension.user() для параметра без @User падает с ошибкой о несозданном пользователе")
+  void userCannotBeTakenForParameterWithoutUserAnnotation() {
+    assertTrue(
+        failure(OtherTypeWithoutUser.class).getMessage().startsWith("Пользователь для параметра"),
+        "UserExtension.user() для параметра без @User не упал с ошибкой о несозданном пользователе"
+    );
+  }
+
   private static EngineExecutionResults run(Class<?> sample) {
     return EngineTestKit.engine("junit-jupiter")
         .selectors(DiscoverySelectors.selectClass(sample))
@@ -427,6 +460,45 @@ class UserExtensionTest {
 
     @Test
     void test(@User String user) {
+    }
+  }
+
+  record Holder(TestUser user) {
+  }
+
+  static final class HolderResolver implements ParameterResolver {
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+      return parameterContext.getParameter().getType().equals(Holder.class);
+    }
+
+    @Override
+    public Holder resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+      return new Holder(UserExtension.user(extensionContext, parameterContext.getIndex()));
+    }
+  }
+
+  @ProbeTarget
+  @ExtendWith(HolderResolver.class)
+  static class UserOnOtherType {
+
+    @Test
+    void test(@User Holder holder, TestReporter reporter) {
+      reporter.publishEntry(Map.of(
+          "username", holder.user().username(),
+          "auth", String.valueOf(AUTH_USER_DB_CLIENT.userExists(holder.user().username())),
+          "api", String.valueOf(API_USER_DB_CLIENT.userExists(holder.user().username()))
+      ));
+    }
+  }
+
+  @ProbeTarget
+  @ExtendWith(HolderResolver.class)
+  static class OtherTypeWithoutUser {
+
+    @Test
+    void test(Holder holder) {
     }
   }
 }

@@ -5,23 +5,24 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
+import io.student.rangiffler.ui.component.Notification;
 import io.student.rangiffler.ui.component.PeopleTable;
+import io.student.rangiffler.ui.component.Snackbar;
 
 public final class PeoplePage {
 
   public static final String URL = TestConfig.frontUrl() + "/people";
 
-  private final Page page;
   private final Locator friendsTab;
   private final Locator allPeopleTab;
   private final Locator outcomeInvitationsTab;
   private final Locator incomeInvitationsTab;
   private final Locator searchInput;
   private final Locator searchButton;
+  private final Snackbar snackbar;
   private final PeopleTable table;
 
   public PeoplePage(Page page) {
-    this.page = page;
     Locator main = page.getByRole(AriaRole.MAIN);
     this.friendsTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("Friends").setExact(true));
     this.allPeopleTab = main.getByRole(AriaRole.TAB, new Locator.GetByRoleOptions().setName("All People").setExact(true));
@@ -30,7 +31,14 @@ public final class PeoplePage {
     Locator panel = main.getByRole(AriaRole.TABPANEL);
     this.searchInput = panel.getByRole(AriaRole.TEXTBOX, new Locator.GetByRoleOptions().setName("search people").setExact(true));
     this.searchButton = panel.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("search").setExact(true));
+    this.snackbar = new Snackbar(page);
     this.table = new PeopleTable(page);
+  }
+
+  @Step("Проверить сообщение «{notification}» на странице People")
+  public PeoplePage checkThatNotification(Notification notification) {
+    snackbar.checkThatShows(notification);
+    return this;
   }
 
   @Step("Открыть вкладку Friends")

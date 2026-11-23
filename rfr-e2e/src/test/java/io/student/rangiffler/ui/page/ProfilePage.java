@@ -5,6 +5,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
+import io.student.rangiffler.ui.component.Notification;
+import io.student.rangiffler.ui.component.Snackbar;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,7 +30,7 @@ public final class ProfilePage {
   private final Locator avatarImage;
   private final Locator saveButton;
   private final Locator resetButton;
-  private final Locator savedMessage;
+  private final Snackbar snackbar;
 
   public ProfilePage(Page page) {
     this.page = page;
@@ -42,8 +44,7 @@ public final class ProfilePage {
     this.avatarImage = main.getByRole(AriaRole.IMG, new Locator.GetByRoleOptions().setName("").setExact(true));
     this.saveButton = main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save").setExact(true));
     this.resetButton = main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Reset").setExact(true));
-    this.savedMessage = page.getByRole(AriaRole.ALERT)
-        .filter(new Locator.FilterOptions().setHasText("Your profile is successfully updated"));
+    this.snackbar = new Snackbar(page);
   }
 
   @Step("Открыть профиль без входа")
@@ -107,9 +108,9 @@ public final class ProfilePage {
     return this;
   }
 
-  @Step("Проверить, что появилось сообщение об успешном сохранении профиля")
-  public ProfilePage checkThatProfileIsSaved() {
-    assertThat(savedMessage).isVisible();
+  @Step("Проверить сообщение «{notification}» на странице Profile")
+  public ProfilePage checkThatNotification(Notification notification) {
+    snackbar.checkThatShows(notification);
     return this;
   }
 
