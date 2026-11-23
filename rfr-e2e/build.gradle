@@ -83,6 +83,7 @@ tasks.register('e2e', Test) {
     }
     systemProperty 'rfr.standCheck', 'true'
     systemProperty 'rfr.stand.schema.check', 'true'
+    environment 'PLAYWRIGHT_JAVA_SRC', sourceSets.test.java.sourceDirectories.asPath
 }
 
 tasks.register('installPlaywright', JavaExec) {

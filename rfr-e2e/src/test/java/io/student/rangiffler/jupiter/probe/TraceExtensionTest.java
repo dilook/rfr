@@ -8,6 +8,7 @@ import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import io.student.rangiffler.jupiter.extension.PlaywrightOptions;
 import io.student.rangiffler.jupiter.extension.TraceExtension;
 import io.student.rangiffler.session.GuestSession;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -78,6 +79,25 @@ class TraceExtensionTest {
   }
 
   @Test
+  @DisplayName("Трассировка не превращает прерванный тест в упавший")
+  void tracingShouldKeepAbortedTestAborted(@TempDir Path traces) {
+    assertEquals(
+        1L,
+        run(AbortedSample.class, traces).testEvents().aborted().count(),
+        "Прерванный образец не остался прерванным"
+    );
+  }
+
+  @Test
+  @DisplayName("Трасса прерванного теста не сохраняется")
+  void traceShouldNotBeSavedForAbortedTest(@TempDir Path traces) throws IOException {
+    run(AbortedSample.class, traces);
+    try (Stream<Path> files = Files.list(traces)) {
+      assertEquals(0L, files.count(), "Трасса прерванного теста сохранена, хотя не нужна");
+    }
+  }
+
+  @Test
   @DisplayName("Трасса прошедшего теста не сохраняется")
   void traceShouldNotBeSavedForPassedTest(@TempDir Path traces) throws IOException {
     run(PassedSample.class, traces);
@@ -126,6 +146,18 @@ class TraceExtensionTest {
     void test(Page page) {
       page.setContent("<button>Probe</button>");
       fail("Образец падает намеренно");
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  @ExtendWith(TraceExtension.class)
+  static class AbortedSample {
+
+    @Test
+    void test(Page page) {
+      page.setContent("<button>Probe</button>");
+      Assumptions.abort("Образец прерван намеренно");
     }
   }
 

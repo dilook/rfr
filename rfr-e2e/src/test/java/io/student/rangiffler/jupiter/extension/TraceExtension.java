@@ -9,6 +9,7 @@ import io.student.rangiffler.config.TestConfig;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.TestAbortedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +18,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Трасса пишется для каждого контекста браузера UI-теста, а сохраняется только у упавших и прерванных. У прошедшего
+ * Трасса пишется для каждого контекста браузера UI-теста, а сохраняется только у упавших. У прошедшего и прерванного
  * теста она не останавливается: Playwright закрывает контекст, и незавершённая трасса отбрасывается вместе с ним, а
  * явная остановка лишь добавила бы точку отказа, которая красит прошедший тест. Контекст теста берётся так же, как в
  * BrowserTimeoutExtension; Playwright закрывает его в колбэках TestWatcher, которые JUnit
@@ -54,13 +55,13 @@ public final class TraceExtension implements BeforeEachCallback, AfterEachCallba
 
   private static void start(ExtensionContext extensionContext, String label, BrowserContext browserContext) {
     Tracing tracing = browserContext.tracing();
-    tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true));
+    tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
     extensionContext.getStore(NAMESPACE).put(label, tracing);
   }
 
   public static void stopTraceAndAttachToReport(ExtensionContext context, String label) throws IOException {
     Optional<Tracing> started = Optional.ofNullable(context.getStore(NAMESPACE).remove(label, Tracing.class));
-    if (started.isEmpty() || context.getExecutionException().isEmpty()) {
+    if (started.isEmpty() || context.getExecutionException().map(TestAbortedException.class::isInstance).orElse(true)) {
       return;
     }
     Path tracePath = Path.of(context.getConfigurationParameter("rfr.trace.dir").orElseGet(TestConfig::traceDir)).resolve(
