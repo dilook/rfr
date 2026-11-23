@@ -8,9 +8,13 @@ import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;
 import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import io.student.rangiffler.jupiter.extension.StandReadinessExtension;
+import io.student.rangiffler.stand.Stand;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
@@ -35,9 +39,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Проверяет StandReadinessExtension на подставном стенде: rfr-auth, rfr-api и фронт заменяет HttpServer на эфемерном
- * порту, а MySQL остаётся настоящей локальной, как в остальных пробах.
+ * порту, а MySQL остаётся настоящей локальной, как в остальных пробах. Extension собирает обёртка StubbedStand из
+ * параметров EngineTestKit, потому что JUnit создаёт расширения из @ExtendWith конструктором без аргументов.
  */
 class StandReadinessExtensionTest {
+
+  private static final String CHECK = "probe.stand.check";
+  private static final String TIMEOUT = "probe.stand.timeout";
+  private static final String URL = "probe.stand.url";
+  private static final String JDBC = "probe.stand.jdbc";
+
+  @Test
+  @DisplayName("Проверка стенда выполняется один раз на прогон, сколько бы UI-классов в нём ни было")
+  void checkShouldRunOnceForAllUiClasses() throws IOException {
+    try (FakeService oneClassService = new FakeService(Duration.ZERO).start();
+         FakeService twoClassService = new FakeService(Duration.ZERO).start()) {
+      EngineExecutionResults oneClassRun = run(oneClassService.url(), "true", "1", TestConfig.dbJdbcUrl(), Guarded.class);
+      EngineExecutionResults twoClassRun = run(twoClassService.url(), "true", "1", TestConfig.dbJdbcUrl(), Guarded.class, Second.class);
+      assertEquals(
+          List.of(1L, 2L, oneClassService.hits()),
+          List.of(
+              oneClassRun.testEvents().succeeded().count(),
+              twoClassRun.testEvents().succeeded().count(),
+              twoClassService.hits()
+          ),
+          "Проверка стенда запускается не один раз перед запуском всех тестов или образцы не выполнились успешно"
+      );
+    }
+  }
 
   @Test
   @DisplayName("Сервис начал отвечать через 2 с — тесты выполняются")
@@ -155,22 +184,39 @@ class StandReadinessExtensionTest {
     }
   }
 
+  @Test
+  @DisplayName("Класс без тега не ждёт стенд — образец выполняется, а к сервису нет ни одного запроса")
+  void untaggedClassShouldNotCallService() throws IOException {
+    try (FakeService service = new FakeService(Duration.ZERO).start()) {
+      assertEquals(
+          List.of(1L, 0),
+          List.of(
+              run(service.url(), "true", "1", TestConfig.dbJdbcUrl(), Untagged.class).testEvents().succeeded().count(),
+              service.hits()
+          ),
+          "Класс без тега ждал стенд или образец не выполнился"
+      );
+    }
+  }
+
   private static EngineExecutionResults run(String url, String check, String timeout) {
     return run(url, check, timeout, TestConfig.dbJdbcUrl());
   }
 
   private static EngineExecutionResults run(String url, String check, String timeout, String jdbcUrl) {
+    return run(url, check, timeout, jdbcUrl, Guarded.class);
+  }
+
+  private static EngineExecutionResults run(String url, String check, String timeout, String jdbcUrl, Class<?>... target) {
     return EngineTestKit.engine("junit-jupiter")
-        .selectors(DiscoverySelectors.selectClass(StandSample.class))
+        .selectors(DiscoverySelectors.selectClasses(target))
         .configurationParameter(ProbeTargetCondition.ENABLED, "true")
         // Автоопределение подключило бы к образцам AllureJupiter и Stand*Extension из ServiceLoader.
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "false")
-        .configurationParameter("rfr.standCheck", check)
-        .configurationParameter("rfr.standTimeout", timeout)
-        .configurationParameter("rfr.auth.url", url)
-        .configurationParameter("rfr.api.url", url)
-        .configurationParameter("rfr.front.url", url)
-        .configurationParameter("rfr.db.jdbc.url", jdbcUrl)
+        .configurationParameter(CHECK, check)
+        .configurationParameter(TIMEOUT, timeout)
+        .configurationParameter(URL, url)
+        .configurationParameter(JDBC, jdbcUrl)
         .execute();
   }
 
@@ -348,9 +394,52 @@ class StandReadinessExtensionTest {
     }
   }
 
+  /**
+   * Собирает StandReadinessExtension с тегом probe-stand и стендом из параметров пробы и отдаёт ему свой контекст класса.
+   */
+  static final class StubbedStand implements BeforeAllCallback {
+
+    @Override
+    public void beforeAll(ExtensionContext context) {
+      new StandReadinessExtension(
+          Boolean.parseBoolean(parameter(context, CHECK)),
+          "probe-stand",
+          new Stand(
+              parameter(context, JDBC), parameter(context, URL), parameter(context, URL), parameter(context, URL),
+              Duration.ofSeconds(Long.parseLong(parameter(context, TIMEOUT)))
+          )
+      ).beforeAll(context);
+    }
+
+    private String parameter(ExtensionContext context, String key) {
+      return context.getConfigurationParameter(key)
+          .orElseThrow(() -> new IllegalStateException("Проба не передала образцу параметр " + key));
+    }
+  }
+
   @ProbeTarget
-  @ExtendWith(StandReadinessExtension.class)
-  static class StandSample {
+  @Tag("probe-stand")
+  @ExtendWith(StubbedStand.class)
+  static class Second {
+
+    @Test
+    void test() {
+    }
+  }
+
+  @ProbeTarget
+  @Tag("probe-stand")
+  @ExtendWith(StubbedStand.class)
+  static class Guarded {
+
+    @Test
+    void test() {
+    }
+  }
+
+  @ProbeTarget
+  @ExtendWith(StubbedStand.class)
+  static class Untagged {
 
     @Test
     void test() {
