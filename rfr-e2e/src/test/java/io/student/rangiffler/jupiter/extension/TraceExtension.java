@@ -8,6 +8,7 @@ import io.student.rangiffler.config.TestConfig;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.opentest4j.TestAbortedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +17,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Трасса пишется для каждого UI-теста, а сохраняется только у упавших и прерванных. У прошедшего теста она не
+ * Трасса пишется для каждого UI-теста, а сохраняется только у упавших. У прошедшего и прерванного теста она не
  * останавливается: Playwright закрывает контекст теста, и незавершённая трасса отбрасывается вместе с ним, а явная
  * остановка лишь добавила бы точку отказа, которая красит прошедший тест. Контекст берётся так же, как в
  * BrowserTimeoutExtension; Playwright закрывает его в колбэках TestWatcher, которые JUnit
@@ -33,14 +34,14 @@ public final class TraceExtension implements BeforeEachCallback, AfterEachCallba
   @Override
   public void beforeEach(ExtensionContext test) {
     Tracing tracing = BrowserContextExtension.getOrCreateBrowserContext(test).tracing();
-    tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true));
+    tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
     test.getStore(NAMESPACE).put(Tracing.class, tracing);
   }
 
   @Override
   public void afterEach(ExtensionContext test) throws IOException {
     Optional<Tracing> started = Optional.ofNullable(test.getStore(NAMESPACE).remove(Tracing.class, Tracing.class));
-    if (started.isEmpty() || test.getExecutionException().isEmpty()) {
+    if (started.isEmpty() || test.getExecutionException().map(TestAbortedException.class::isInstance).orElse(true)) {
       return;
     }
     Path trace = Path.of(test.getConfigurationParameter("rfr.trace.dir").orElseGet(TestConfig::traceDir)).resolve(
