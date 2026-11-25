@@ -28,4 +28,9 @@ public enum FriendStatus {
   public List<PeopleAction> actions() {
     return actions;
   }
+
+  @Override
+  public String toString() {
+    return name() + " (кнопки " + actions + (waiting ? ", плашка Waiting..." : "") + ")";
+  }
 }
