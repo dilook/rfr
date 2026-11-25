@@ -18,13 +18,13 @@ public class FriendshipBetweenSessionsTest {
   @Test
   @DisplayName("Приглашение в друзья, отправленное из браузера теста, видно приглашённому во входящих в его сессии")
   void invitationSentShouldBeListedInInviteeIncomeInvitations(Page page, @User TestUser alice, @Session @User UserSession bob) {
-    PeopleLogin.open(page, alice)
+    PeoplePage people = PeopleLogin.open(page, alice)
         .clickAllPeopleTab()
-        .searchPeople(bob.user().username())
-        .table()
+        .searchPeople(bob.user().username());
+    people.table()
         .row(bob.user().username())
-        .clickAdd()
-        .checkThatIsWaitingAndCanBeCancelled();
+        .clickAdd();
+    people.checkThatNotification(Notification.INVITATION_SENT);
     bob.openMyTravels()
         .goToPeople()
         .clickIncomeInvitationsTab()
@@ -64,6 +64,23 @@ public class FriendshipBetweenSessionsTest {
     invitations.checkThatNotification(Notification.INVITATION_DECLINED);
     PeopleLogin.open(page, alice)
         .clickOutcomeInvitationsTab()
+        .table()
+        .checkThatIsEmpty();
+  }
+
+  @Test
+  @DisplayName("Отменённое приглашение пропадает из входящих у приглашённого")
+  void cancelledInvitationShouldDisappearFromInviteeIncomeInvitations(Page page, @Session @User(outcomeInvitations = 1) UserSession alice) {
+    TestUser invitee = alice.user().outcomeInvitations().getFirst();
+    PeoplePage invitations = alice.openMyTravels()
+        .goToPeople()
+        .clickOutcomeInvitationsTab();
+    invitations.table()
+        .row(invitee.username())
+        .clickCancel();
+    invitations.checkThatNotification(Notification.INVITATION_CANCELLED);
+    PeopleLogin.open(page, invitee)
+        .clickIncomeInvitationsTab()
         .table()
         .checkThatIsEmpty();
   }

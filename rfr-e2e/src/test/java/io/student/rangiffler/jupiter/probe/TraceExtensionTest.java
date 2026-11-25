@@ -3,9 +3,11 @@ package io.student.rangiffler.jupiter.probe;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.junit.UsePlaywright;
 import io.student.rangiffler.jupiter.annotation.ProbeTarget;
+import io.student.rangiffler.jupiter.annotation.Session;
 import io.student.rangiffler.jupiter.condition.ProbeTargetCondition;
 import io.student.rangiffler.jupiter.extension.PlaywrightOptions;
 import io.student.rangiffler.jupiter.extension.TraceExtension;
+import io.student.rangiffler.session.GuestSession;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,13 +38,27 @@ import static org.junit.jupiter.api.Assertions.fail;
 class TraceExtensionTest {
 
   @Test
+  @DisplayName("Для каждого контекста браузера упавшего теста сохраняется своя трасса, у сессии — с индексом параметра")
+  void tracesShouldBeSavedForEachContextOfFailedTest(@TempDir Path traces) throws IOException {
+    run(FailedWithSession.class, traces);
+    String prefix = FailedWithSession.class.getName().replace('$', '.') + ".test";
+    try (Stream<Path> files = Files.list(traces)) {
+      assertEquals(
+          Stream.of(prefix + "-test.zip", prefix + "-session-0.zip").sorted().toList(),
+          files.map(file -> file.getFileName().toString().replaceFirst("-[0-9a-f]{8}-", "-")).sorted().toList(),
+          "Трассы упавшего теста сохранены не по одной на каждый контекст браузера"
+      );
+    }
+  }
+
+  @Test
   @DisplayName("Трасса упавшего теста сохраняется в zip с полным именем класса, методом и хешем вызова")
   void traceShouldBeSavedForFailedTest(@TempDir Path traces) throws IOException {
     run(FailedSample.class, traces);
     try (Stream<Path> files = Files.list(traces)) {
       assertTrue(
           files.map(file -> file.getFileName().toString()).anyMatch(
-              name -> name.matches("\\Q" + FailedSample.class.getName().replace('$', '.') + ".test-\\E[0-9a-f]{8}\\.zip")
+              name -> name.matches("\\Q" + FailedSample.class.getName().replace('$', '.') + ".test-\\E[0-9a-f]{8}-test\\.zip")
           ),
           "Трасса упавшего теста не сохранена под именем класса, метода и хеша вызова"
       );
@@ -183,6 +199,18 @@ class TraceExtensionTest {
     @Test
     void test(Page page) {
       page.setContent("<button>Probe</button>");
+    }
+  }
+
+  @ProbeTarget
+  @UsePlaywright(PlaywrightOptions.class)
+  @ExtendWith(TraceExtension.class)
+  static class FailedWithSession {
+
+    @Test
+    void test(@Session GuestSession guest, Page page) {
+      page.setContent("<button>Probe</button>");
+      fail("Образец падает намеренно");
     }
   }
 }

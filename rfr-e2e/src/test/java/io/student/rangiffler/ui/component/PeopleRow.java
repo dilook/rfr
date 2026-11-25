@@ -34,6 +34,12 @@ public final class PeopleRow {
     return this;
   }
 
+  @Step("Нажать Cancel в строке {this.username}")
+  public PeopleRow clickCancel() {
+    button(PeopleAction.CANCEL).click();
+    return this;
+  }
+
   @Step("Нажать Remove в строке {this.username}")
   public PeopleRow clickRemove() {
     button(PeopleAction.REMOVE).click();

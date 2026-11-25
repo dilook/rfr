@@ -1,5 +1,6 @@
 package io.student.rangiffler.jupiter.extension;
 
+import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Tracing;
 import com.microsoft.playwright.impl.junit.BrowserContextExtension;
 import io.qameta.allure.Allure;
@@ -17,44 +18,64 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * Трасса пишется для каждого UI-теста, а сохраняется только у упавших. У прошедшего и прерванного теста она не
- * останавливается: Playwright закрывает контекст теста, и незавершённая трасса отбрасывается вместе с ним, а явная
- * остановка лишь добавила бы точку отказа, которая красит прошедший тест. Контекст берётся так же, как в
+ * Трасса пишется для каждого контекста браузера UI-теста, а сохраняется только у упавших. У прошедшего и прерванного
+ * теста она не останавливается: Playwright закрывает контекст, и незавершённая трасса отбрасывается вместе с ним, а
+ * явная остановка лишь добавила бы точку отказа, которая красит прошедший тест. Контекст теста берётся так же, как в
  * BrowserTimeoutExtension; Playwright закрывает его в колбэках TestWatcher, которые JUnit
- * вызывает после afterEach, поэтому трасса останавливается на ещё живом контексте. Начатая трассировка кладётся в Store
- * теста: если предыдущий beforeEach упал и трассировка не началась, afterEach не создаёт контекст заново и не добавляет
- * своих ошибок к исходной. Каталог трасс сначала ищется в параметрах конфигурации JUnit, чтобы пробы задавали временный,
- * затем в TestConfig. Хеш уникального идентификатора в имени файла разводит вызовы повторяемых и параметризованных
- * тестов, которые при параллельном прогоне иначе писали бы в один файл.
+ * вызывает после afterEach, поэтому трасса останавливается на ещё живом контексте. Трассы контекстов сессий запускает и
+ * останавливает SessionExtension, потому что только он знает, когда эти контексты создаются и какие параметры их
+ * получили, а хранение и сохранение остаются здесь, чтобы он не зависел от устройства Store. Трасса сессии
+ * запускается, только если в Store уже лежит трасса теста: JUnit не говорит, какие extension'ы подключены, а трасса
+ * теста появляется в beforeEach, раньше сессий, и есть только там, где подключён этот extension. Начатая трассировка
+ * кладётся в Store теста под меткой: если предыдущий колбэк упал и трассировка не началась, остановка не создаёт
+ * контекст заново и не добавляет своих ошибок к исходной. Метки контекста теста и сессий не пересекаются при любом
+ * порядке параметров и разводят файлы и вложения одного теста. Каталог трасс сначала ищется в параметрах конфигурации
+ * JUnit, чтобы пробы задавали временный, затем в TestConfig. Хеш уникального идентификатора в имени файла разводит
+ * вызовы повторяемых и параметризованных тестов, которые при параллельном прогоне иначе писали бы в один файл.
  */
 public final class TraceExtension implements BeforeEachCallback, AfterEachCallback {
 
   private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(TraceExtension.class);
 
   @Override
-  public void beforeEach(ExtensionContext test) {
-    Tracing tracing = BrowserContextExtension.getOrCreateBrowserContext(test).tracing();
-    tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
-    test.getStore(NAMESPACE).put(Tracing.class, tracing);
+  public void beforeEach(ExtensionContext context) {
+    start(context, "test", BrowserContextExtension.getOrCreateBrowserContext(context));
   }
 
   @Override
-  public void afterEach(ExtensionContext test) throws IOException {
-    Optional<Tracing> started = Optional.ofNullable(test.getStore(NAMESPACE).remove(Tracing.class, Tracing.class));
-    if (started.isEmpty() || test.getExecutionException().map(TestAbortedException.class::isInstance).orElse(true)) {
+  public void afterEach(ExtensionContext extensionContext) throws IOException {
+    stopTraceAndAttachToReport(extensionContext, "test");
+  }
+
+  public static void startTraceAndSaveToStore(ExtensionContext extensionContext, String label, BrowserContext browserContext) {
+    if (extensionContext.getStore(NAMESPACE).get("test", Tracing.class) != null) {
+      start(extensionContext, label, browserContext);
+    }
+  }
+
+  private static void start(ExtensionContext extensionContext, String label, BrowserContext browserContext) {
+    Tracing tracing = browserContext.tracing();
+    tracing.start(new Tracing.StartOptions().setScreenshots(true).setSnapshots(true).setSources(true));
+    extensionContext.getStore(NAMESPACE).put(label, tracing);
+  }
+
+  public static void stopTraceAndAttachToReport(ExtensionContext context, String label) throws IOException {
+    Optional<Tracing> started = Optional.ofNullable(context.getStore(NAMESPACE).remove(label, Tracing.class));
+    if (started.isEmpty() || context.getExecutionException().map(TestAbortedException.class::isInstance).orElse(true)) {
       return;
     }
-    Path trace = Path.of(test.getConfigurationParameter("rfr.trace.dir").orElseGet(TestConfig::traceDir)).resolve(
-        "%s.%s-%08x.zip".formatted(
-            test.getRequiredTestClass().getName().replace('$', '.'),
-            test.getRequiredTestMethod().getName(),
-            test.getUniqueId().hashCode()
+    Path tracePath = Path.of(context.getConfigurationParameter("rfr.trace.dir").orElseGet(TestConfig::traceDir)).resolve(
+        "%s.%s-%08x-%s.zip".formatted(
+            context.getRequiredTestClass().getName().replace('$', '.'),
+            context.getRequiredTestMethod().getName(),
+            context.getUniqueId().hashCode(),
+            label
         )
     );
-    Files.createDirectories(trace.getParent());
-    started.get().stop(new Tracing.StopOptions().setPath(trace));
-    try (InputStream content = Files.newInputStream(trace)) {
-      Allure.attachment("trace.zip", "application/zip", content, AttachmentOptions.withFileExtension(".zip"));
+    Files.createDirectories(tracePath.getParent());
+    started.get().stop(new Tracing.StopOptions().setPath(tracePath));
+    try (InputStream content = Files.newInputStream(tracePath)) {
+      Allure.attachment(label + ".zip", "application/zip", content, AttachmentOptions.withFileExtension(".zip"));
     }
   }
 }

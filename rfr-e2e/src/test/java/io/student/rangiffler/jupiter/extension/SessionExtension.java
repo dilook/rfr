@@ -10,6 +10,7 @@ import io.student.rangiffler.session.UserSession;
 import io.student.rangiffler.session.fixture.GuestSessionFixture;
 import io.student.rangiffler.session.fixture.SessionFixture;
 import io.student.rangiffler.session.fixture.UserSessionFixture;
+import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
+import java.io.IOException;
 import java.lang.reflect.Parameter;
 
 /**
@@ -24,9 +26,13 @@ import java.lang.reflect.Parameter;
  * пользователь из UserExtension к этому моменту уже создан, в каком бы порядке ни стояли аннотации и параметры.
  * Browser берётся у @UsePlaywright через BrowserExtension из внутреннего пакета Playwright, который может измениться
  * при обновлении библиотеки. Опции контекста и baseUrl Browser не хранит, поэтому они собираются из PlaywrightOptions
- * так же, как Playwright собирает контекст Page теста.
+ * так же, как Playwright собирает контекст Page теста. Трасса контекста сессии запускается сразу после его создания, до
+ * открытия страницы, чтобы в неё попал вход пользователя. Останавливается она в afterTestExecution: JUnit вызывает его,
+ * даже если упал вход в beforeTestExecution, и раньше, чем закрывает фикстуры сессий из Store. Трассы останавливаются
+ * все, даже если остановка одной упала, например на закрытом тестом контексте: первая ошибка несёт остальные как
+ * suppressed, как в TearDown.
  */
-public final class SessionExtension implements BeforeTestExecutionCallback, ParameterResolver {
+public final class SessionExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback, ParameterResolver {
 
   private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(SessionExtension.class);
 
@@ -66,21 +72,50 @@ public final class SessionExtension implements BeforeTestExecutionCallback, Para
   private static SessionFixture<?> fixture(Parameter parameter, int index, ExtensionContext context) {
     boolean user = parameter.isAnnotationPresent(User.class);
     if (parameter.getType().equals(GuestSession.class) && !user) {
-      return new GuestSessionFixture(() -> newContext(context));
+      return guest(context, index);
     }
     if (parameter.getType().equals(UserSession.class) && user) {
-      return new UserSessionFixture(new GuestSessionFixture(() -> newContext(context)), UserExtension.user(context, index));
+      return new UserSessionFixture(guest(context, index), UserExtension.user(context, index));
     }
     throw new ExtensionConfigurationException(
         "@Session ставится на GuestSession без @User или на UserSession с @User, а стоит на " + parameter
     );
   }
 
+  private static GuestSessionFixture guest(ExtensionContext test, int index) {
+    return new GuestSessionFixture(
+        () -> newContext(test),
+        created -> {
+          BrowserTimeoutExtension.configure(created);
+          TraceExtension.startTraceAndSaveToStore(test, "session-" + index, created);
+        }
+    );
+  }
+
   private static BrowserContext newContext(ExtensionContext test) {
     Options options = new PlaywrightOptions().getOptions();
-    BrowserContext context = BrowserExtension.getOrCreateBrowser(test)
-        .newContext(options.contextOptions.setBaseURL(options.baseUrl));
-    BrowserTimeoutExtension.configure(context);
-    return context;
+    return BrowserExtension.getOrCreateBrowser(test).newContext(options.contextOptions.setBaseURL(options.baseUrl));
+  }
+
+  @Override
+  public void afterTestExecution(ExtensionContext context) throws Exception {
+    Parameter[] parameters = context.getRequiredTestMethod().getParameters();
+    Exception failure = null;
+    for (int i = 0; i < parameters.length; i++) {
+      if (parameters[i].isAnnotationPresent(Session.class)) {
+        try {
+          TraceExtension.stopTraceAndAttachToReport(context, "session-" + i);
+        } catch (IOException | RuntimeException e) {
+          if (failure == null) {
+            failure = e;
+          } else {
+            failure.addSuppressed(e);
+          }
+        }
+      }
+    }
+    if (failure != null) {
+      throw failure;
+    }
   }
 }
