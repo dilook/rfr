@@ -18,13 +18,13 @@ public class FriendshipBetweenSessionsTest {
   @Test
   @DisplayName("Приглашение в друзья, отправленное из браузера теста, видно приглашённому во входящих в его сессии")
   void invitationSentShouldBeListedInInviteeIncomeInvitations(Page page, @User TestUser alice, @Session @User UserSession bob) {
-    PeopleLogin.open(page, alice)
+    PeoplePage people = PeopleLogin.open(page, alice)
         .clickAllPeopleTab()
-        .searchPeople(bob.user().username())
-        .table()
+        .searchPeople(bob.user().username());
+    people.table()
         .row(bob.user().username())
-        .clickAdd()
-        .checkThatIsWaitingAndCanBeCancelled();
+        .clickAdd();
+    people.checkThatNotification(Notification.INVITATION_SENT);
     bob.openMyTravels()
         .goToPeople()
         .clickIncomeInvitationsTab()
