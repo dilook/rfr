@@ -93,7 +93,8 @@ extension'ов, стоящих после упавшего, поэтому `Allu
 
 Тест в `jupiter/probe` запускает вложенные классы-образцы через `EngineTestKit` и проверяет события запуска и состояние после
 закрытия Store: БД для `@User`, очередь пула для `@StaticUser`. Образцы помечены `@ProbeTarget`: в обычном прогоне они отключены и видны в отчёте как skipped,
-а EngineTestKit включает их параметром `probe.enabled=true`. Что образец получил от расширения, он
+а EngineTestKit включает их параметром `probe.enabled=true`. `@ProbeTarget` добавляет тег `probe`, который таска `e2e`
+исключает: образец с тегом `ui` (`AllureEnvironmentExtensionTest.UiSample`) не попадает в неё пропущенным тестом. Что образец получил от расширения, он
 публикует через `TestReporter`. Образцы с `@UsePlaywright` запускаются через `IsolatedRun` — каждый вложенный прогон в
 своём потоке: Playwright 1.63 закрывает свой экземпляр в конце прогона, но оставляет его в `ThreadLocal`, и второй
 прогон в том же потоке упал бы с «Playwright connection closed».
