@@ -2,9 +2,9 @@ package io.student.rangiffler.test.travels;
 
 import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.domain.Notification;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
-import io.student.rangiffler.ui.component.Notification;
 import io.student.rangiffler.ui.page.MyTravelsPage;
 import io.student.rangiffler.ui.page.WelcomePage;
 import org.junit.jupiter.api.DisplayName;

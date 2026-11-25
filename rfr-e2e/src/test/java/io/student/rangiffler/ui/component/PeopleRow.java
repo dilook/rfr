@@ -3,6 +3,8 @@ package io.student.rangiffler.ui.component;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
+import io.student.rangiffler.domain.FriendStatus;
+import io.student.rangiffler.domain.PeopleAction;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -52,18 +54,12 @@ public final class PeopleRow {
     return this;
   }
 
-  @Step("Проверить, что в строке {this.username} есть кнопки {actions}")
-  public PeopleRow checkThatHasActions(PeopleAction... actions) {
-    for (PeopleAction action : actions) {
-      assertThat(button(action)).isVisible();
-    }
-    return this;
-  }
-
-  @Step("Проверить, что в строке {this.username} есть Waiting... и Cancel")
-  public PeopleRow checkThatIsWaitingAndCanBeCancelled() {
-    assertThat(row.getByText("Waiting...", new Locator.GetByTextOptions().setExact(true))).isVisible();
-    assertThat(button(PeopleAction.CANCEL)).isVisible();
+  @Step("Проверить, что строка {this.username} показывает статус {status}")
+  public PeopleRow checkThatStatus(FriendStatus status) {
+    assertThat(row.getByRole(AriaRole.BUTTON)).hasText(
+        status.actions().stream().map(PeopleAction::toString).toArray(String[]::new)
+    );
+    assertThat(row.getByText("Waiting...", new Locator.GetByTextOptions().setExact(true))).hasCount(status.waiting() ? 1 : 0);
     return this;
   }
 

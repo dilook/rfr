@@ -2,9 +2,9 @@ package io.student.rangiffler.test.people;
 
 import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.domain.FriendStatus;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
-import io.student.rangiffler.ui.component.PeopleAction;
 import io.student.rangiffler.ui.page.PeoplePage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ public class IncomeInvitationsTabTest {
     openIncomeInvitations(user, page)
         .table()
         .row(user.incomeInvitations().getFirst().username())
-        .checkThatHasActions(PeopleAction.ACCEPT, PeopleAction.DECLINE);
+        .checkThatStatus(FriendStatus.INVITATION_RECEIVED);
   }
 
   @Test

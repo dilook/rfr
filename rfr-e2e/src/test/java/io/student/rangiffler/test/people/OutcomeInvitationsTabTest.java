@@ -2,6 +2,7 @@ package io.student.rangiffler.test.people;
 
 import com.microsoft.playwright.Page;
 import io.student.rangiffler.data.TestUser;
+import io.student.rangiffler.domain.FriendStatus;
 import io.student.rangiffler.jupiter.annotation.UiTest;
 import io.student.rangiffler.jupiter.annotation.User;
 import io.student.rangiffler.ui.page.PeoplePage;
@@ -27,7 +28,7 @@ public class OutcomeInvitationsTabTest {
     openOutcomeInvitations(user, page)
         .table()
         .row(user.outcomeInvitations().getFirst().username())
-        .checkThatIsWaitingAndCanBeCancelled();
+        .checkThatStatus(FriendStatus.INVITATION_SENT);
   }
 
   @Test

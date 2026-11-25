@@ -5,7 +5,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 import io.student.rangiffler.config.TestConfig;
-import io.student.rangiffler.ui.component.Notification;
+import io.student.rangiffler.domain.Notification;
 import io.student.rangiffler.ui.component.Snackbar;
 
 import java.io.IOException;
