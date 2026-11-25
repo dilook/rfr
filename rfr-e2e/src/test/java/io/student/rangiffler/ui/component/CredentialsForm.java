@@ -6,6 +6,7 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public final class CredentialsForm {
 
@@ -38,15 +39,21 @@ public final class CredentialsForm {
 
   @Step("Проверить, что пароль показан открытым текстом: {password}")
   public CredentialsForm checkThatPasswordIsVisible(String password) {
-    assertThat(passwordInput).hasAttribute("type", "text");
-    assertThat(passwordInput).hasValue(password);
+    assertAll(
+        "Пароль " + password + " не показан открытым текстом в поле Password",
+        () -> assertThat(passwordInput).hasAttribute("type", "text"),
+        () -> assertThat(passwordInput).hasValue(password)
+    );
     return this;
   }
 
   @Step("Проверить, что пароль скрыт и сохранён: {password}")
   public CredentialsForm checkThatPasswordIsMasked(String password) {
-    assertThat(passwordInput).hasAttribute("type", "password");
-    assertThat(passwordInput).hasValue(password);
+    assertAll(
+        "Пароль " + password + " не сохранён скрытым в поле Password",
+        () -> assertThat(passwordInput).hasAttribute("type", "password"),
+        () -> assertThat(passwordInput).hasValue(password)
+    );
     return this;
   }
 }

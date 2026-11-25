@@ -8,6 +8,7 @@ import io.student.rangiffler.config.TestConfig;
 import io.student.rangiffler.ui.component.CredentialsForm;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public final class LoginPage {
 
@@ -68,15 +69,21 @@ public final class LoginPage {
 
   @Step("Проверить, что форма не отправлена: Username обязателен")
   public LoginPage checkThatUsernameIsRequired() {
-    credentialsForm.checkThatUsernameIsFocused();
-    assertThat(errorMessage).isHidden();
+    assertAll(
+        "Форма входа не требует заполнить поле Username",
+        credentialsForm::checkThatUsernameIsFocused,
+        () -> assertThat(errorMessage).isHidden()
+    );
     return this;
   }
 
   @Step("Проверить, что форма не отправлена: Password обязателен")
   public LoginPage checkThatPasswordIsRequired() {
-    credentialsForm.checkThatPasswordIsFocused();
-    assertThat(errorMessage).isHidden();
+    assertAll(
+        "Форма входа не требует заполнить поле Password",
+        credentialsForm::checkThatPasswordIsFocused,
+        () -> assertThat(errorMessage).isHidden()
+    );
     return this;
   }
 

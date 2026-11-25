@@ -5,6 +5,7 @@ import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public final class PhotoCard {
 
@@ -36,8 +37,11 @@ public final class PhotoCard {
 
   @Step("Проверить, что на карточке фото {this.description} нет Photo actions")
   public PhotoCard checkThatHasNoPhotoActions() {
-    assertThat(card).isVisible();
-    assertThat(button("Photo actions")).hasCount(0);
+    assertAll(
+        "Карточка фото " + description + " не показана без Photo actions",
+        () -> assertThat(card).isVisible(),
+        () -> assertThat(button("Photo actions")).hasCount(0)
+    );
     return this;
   }
 
@@ -49,8 +53,11 @@ public final class PhotoCard {
 
   @Step("Проверить, что фото {this.description} отмечено моим лайком и у него {likes} лайк(ов)")
   public PhotoCard checkThatIsLikedWith(int likes) {
-    assertThat(button("like")).hasAttribute("aria-pressed", "true");
-    assertThat(counter(likes)).isVisible();
+    assertAll(
+        "Фото " + description + " не отмечено моим лайком с числом лайков " + likes,
+        () -> assertThat(button("like")).hasAttribute("aria-pressed", "true"),
+        () -> assertThat(counter(likes)).isVisible()
+    );
     return this;
   }
 

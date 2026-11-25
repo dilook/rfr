@@ -4,10 +4,13 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.AriaRole;
 import io.qameta.allure.Step;
+import org.junit.jupiter.api.function.Executable;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public final class PeopleTable {
 
@@ -30,18 +33,24 @@ public final class PeopleTable {
 
   @Step("Проверить, что строки таблицы людей — ровно пользователи {usernames}")
   public PeopleTable checkThatRowsAre(List<String> usernames) {
-    assertThat(rows).hasCount(usernames.size());
-    for (String username : usernames) {
-      row(username).checkThatIsListed();
-    }
+    assertAll(
+        "Таблица людей не состоит ровно из пользователей " + usernames,
+        Stream.concat(
+            Stream.<Executable>of(() -> assertThat(rows).hasCount(usernames.size())),
+            usernames.stream().<Executable>map(username -> () -> row(username).checkThatIsListed())
+        )
+    );
     return this;
   }
 
   @Step("Проверить, что таблица людей пуста и нет ошибки загрузки")
   public PeopleTable checkThatIsEmpty() {
-    assertThat(noPeopleMessage).isVisible();
-    assertThat(errorAlert).hasCount(0);
-    assertThat(rows).hasCount(0);
+    assertAll(
+        "Таблица людей не показывает пустой список без ошибки загрузки",
+        () -> assertThat(noPeopleMessage).isVisible(),
+        () -> assertThat(errorAlert).hasCount(0),
+        () -> assertThat(rows).hasCount(0)
+    );
     return this;
   }
 

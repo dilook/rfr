@@ -7,6 +7,7 @@ import io.student.rangiffler.domain.FriendStatus;
 import io.student.rangiffler.domain.PeopleAction;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public final class PeopleRow {
 
@@ -56,10 +57,13 @@ public final class PeopleRow {
 
   @Step("Проверить, что строка {this.username} показывает статус {status}")
   public PeopleRow checkThatStatus(FriendStatus status) {
-    assertThat(row.getByRole(AriaRole.BUTTON)).hasText(
-        status.actions().stream().map(PeopleAction::toString).toArray(String[]::new)
+    assertAll(
+        "Строка пользователя " + username + " не показывает статус " + status,
+        () -> assertThat(row.getByRole(AriaRole.BUTTON)).hasText(
+            status.actions().stream().map(PeopleAction::toString).toArray(String[]::new)
+        ),
+        () -> assertThat(row.getByText("Waiting...", new Locator.GetByTextOptions().setExact(true))).hasCount(status.waiting() ? 1 : 0)
     );
-    assertThat(row.getByText("Waiting...", new Locator.GetByTextOptions().setExact(true))).hasCount(status.waiting() ? 1 : 0);
     return this;
   }
 

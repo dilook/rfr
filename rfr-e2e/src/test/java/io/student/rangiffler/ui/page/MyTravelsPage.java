@@ -14,6 +14,7 @@ import io.student.rangiffler.ui.component.Snackbar;
 import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 public final class MyTravelsPage {
 
@@ -69,24 +70,33 @@ public final class MyTravelsPage {
 
   @Step("Проверить, что в ленте {photos} фото, а счётчик показывает {countries} посещённых стран")
   public MyTravelsPage checkThatTravelsAre(int photos, int countries) {
-    assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(photos);
-    assertThat(button(countries + (countries == 1 ? " country" : " countries") + " visited")).isVisible();
+    assertAll(
+        "Лента My Travels не показывает " + photos + " фото со счётчиком посещённых стран " + countries,
+        () -> assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(photos),
+        () -> assertThat(button(countries + (countries == 1 ? " country" : " countries") + " visited")).isVisible()
+    );
     return this;
   }
 
   @Step("Проверить, что лента отфильтрована по стране {country} и показывает только фото {description}")
   public MyTravelsPage checkThatFilteredBy(String country, String description) {
-    assertThat(button("Country filter: " + country)).isVisible();
-    assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(1);
-    assertThat(card(description)).isVisible();
+    assertAll(
+        "Лента My Travels не отфильтрована по стране " + country + " до одного фото " + description,
+        () -> assertThat(button("Country filter: " + country)).isVisible(),
+        () -> assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(1),
+        () -> assertThat(card(description)).isVisible()
+    );
     return this;
   }
 
   @Step("Проверить, что фильтра по стране нет и в ленте {photos} фото")
   public MyTravelsPage checkThatIsNotFiltered(int photos) {
-    assertThat(main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(Pattern.compile("^Country filter: "))))
-        .hasCount(0);
-    assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(photos);
+    assertAll(
+        "Лента My Travels не показывает " + photos + " фото без фильтра по стране",
+        () -> assertThat(main.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName(Pattern.compile("^Country filter: "))))
+            .hasCount(0),
+        () -> assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(photos)
+    );
     return this;
   }
 
