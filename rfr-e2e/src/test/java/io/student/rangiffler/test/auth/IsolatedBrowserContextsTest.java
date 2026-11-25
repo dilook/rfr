@@ -33,6 +33,6 @@ public class IsolatedBrowserContextsTest {
         .goToPeople()
         .clickFriendsTab()
         .table()
-        .checkThatRowsAre(List.of("bbk"));
+        .checkThatRowsAre(List.of(bobFriendUsername));
   }
 }
