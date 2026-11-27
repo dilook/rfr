@@ -1,0 +1,6 @@
+prefix_rule(pattern = ["docker", "compose", "up"], decision = "allow")
+prefix_rule(pattern = ["./gradlew", ["e2e", ":rfr-e2e:test"]], decision = "allow")
+prefix_rule(pattern = ["rtk", "gradlew", ["e2e", ":rfr-e2e:test"]], decision = "allow")
+prefix_rule(pattern = ["git", ["push", "rm"]], decision = "forbidden")
+prefix_rule(pattern = ["rtk", "git", ["push", "rm"]], decision = "forbidden")
+prefix_rule(pattern = [["rm", "unlink"]], decision = "forbidden")

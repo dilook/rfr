@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/dusoltsev/IdeaProjects/rfr/.codex/hooks/compile.sh'",
+            "timeout": 180,
+            "statusMessage": "Compiling the edited module"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/dusoltsev/IdeaProjects/rfr/.codex/hooks/module-context.sh'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/Users/dusoltsev/IdeaProjects/rfr/.codex/hooks/module-context.sh'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 '/Users/dusoltsev/IdeaProjects/rfr/.codex/hooks/permissions.py'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 '/Users/dusoltsev/IdeaProjects/rfr/.codex/hooks/permissions.py'"
+          }
+        ]
+      }
+    ]
+  }
+}
