@@ -43,3 +43,6 @@ docs/*
 # Playwright MCP
 /.playwright-mcp/
 /.claude/output-styles/mentor.md
+
+#Amplicode
+amplicode.xml
