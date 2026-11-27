@@ -68,6 +68,19 @@ public final class MyTravelsPage {
     return this;
   }
 
+  @Step("Удалить фото {description} через меню Photo actions")
+  public MyTravelsPage deletePhoto(String description) {
+    photo(description).clickPhotoActions();
+    page.getByRole(AriaRole.MENUITEM, new Page.GetByRoleOptions().setName("Delete").setExact(true)).click();
+    return this;
+  }
+
+  @Step("Проверить, что в ленте {photos} фото")
+  public MyTravelsPage checkThatPhotosAre(int photos) {
+    assertThat(main.getByRole(AriaRole.ARTICLE)).hasCount(photos);
+    return this;
+  }
+
   @Step("Проверить, что в ленте {photos} фото, а счётчик показывает {countries} посещённых стран")
   public MyTravelsPage checkThatTravelsAre(int photos, int countries) {
     assertAll(

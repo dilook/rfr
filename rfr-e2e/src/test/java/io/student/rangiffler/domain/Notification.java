@@ -8,6 +8,7 @@ public enum Notification {
   INVITATION_CANCELLED("Invitation cancelled"),
   FRIEND_DELETED("Friend deleted"),
   POST_LIKED("Post was succesfully liked"),
+  POST_DELETED("Post deleted"),
   PROFILE_UPDATED("Your profile is successfully updated");
 
   private final String text;
