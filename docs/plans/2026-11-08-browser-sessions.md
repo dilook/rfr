@@ -170,7 +170,7 @@ class InvitationBetweenSessionsTest {
   - `@Session` в `jupiter/annotation`, `SessionExtension` в `jupiter/extension`;
   - `SessionExtensionTest` в списке проб;
   - в правилах слоёв: `session` не зависит от `jupiter` и не содержит SQL.
-- `rfr-e2e/CLAUDE.md`, раздел «Архитектура проекта»: пакет `session` в списке и пункт о `@Session UserSession` и
+- `rfr-e2e/AGENTS.md`, раздел «Архитектура проекта»: пакет `session` в списке и пункт о `@Session UserSession` и
   `@Session GuestSession`.
 - `.claude/skills/rfr-test-review/SKILL.md`:
   - правило 6: дополнительными контекстами владеют фикстуры `session/fixture`, а `Page` теста — `@UsePlaywright`;

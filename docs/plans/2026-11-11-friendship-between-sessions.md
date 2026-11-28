@@ -76,9 +76,9 @@
 
 ## Документация
 
-- **`rfr-e2e/CLAUDE.md`, подводный камень о независимом чтении:** ссылку `(см. FriendshipLifecycleTest)` заменить
+- **`rfr-e2e/AGENTS.md`, подводный камень о независимом чтении:** ссылку `(см. FriendshipLifecycleTest)` заменить
   на `FriendshipBetweenSessionsTest`.
-- **`rfr-e2e/CLAUDE.md`, «Архитектура проекта»:** новый пункт. Партнёр из предусловия входит в `page`:
+- **`rfr-e2e/AGENTS.md`, «Архитектура проекта»:** новый пункт. Партнёр из предусловия входит в `page`:
   `@Session @User(friends = 1) UserSession bob` и `PeopleLogin.open(page, bob.user().friends().getFirst())`;
   отдельной сессии у партнёра нет.
 - **Проверить**, что после правок нигде не упоминаются `FriendshipLifecycleTest`, `InvitationBetweenSessionsTest`

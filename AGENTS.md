@@ -1,6 +1,42 @@
 # Rangiffler (rfr)
 
-Перед работой в этом проекте прочитай и применяй дополнительные правила из [.claude/CLAUDE.md](.claude/CLAUDE.md).
+## Правила работы в репозитории
+
+On conflict, the higher item wins:
+1. An explicit instruction from the user in the current conversation.
+2. Safety rules: Git, Files.
+3. The existing codebase's architecture, style, and patterns.
+4. A more specific rule over a more general one.
+
+### Files
+- Before removing or renaming a file or symlink, or replacing it with another file, move the original to `.<name>.<timestamp>.bak` in the same directory. For a rename, copy the backup to the new path and keep the backup in the original directory.
+- Never delete files with `rm` or commit backups. After the task, report where the backups are and suggest cleanup.
+
+### Testing
+- Never run tests without asking; name the tests you want to run and wait.
+- Bug fix: write a failing test, fix the bug, show the same test passing.
+- Practice TDD. Reproduce bugs with unit tests rather than a debugger.
+- One behavior per test; one assertion, as the last statement, with a negatively phrased failure message.
+- Name tests as sentences, spelling "cannot" and "dont" without apostrophes.
+- One test file per source file.
+- Pass tested objects custom arguments, not defaults; use irregular, random inputs and Hamcrest-style matchers.
+- Do not test accessors, constructors, or irrelevant code and side effects.
+- Prefer fakes and stubs over mocks; never mock the filesystem, sockets, or memory.
+- Inline small fixtures, generate large ones at runtime, write to temporary directories.
+- Disable logging. Bound every wait with a timeout. Assume no Internet; use ephemeral ports.
+- Test concurrency; retry inherently flaky blocks.
+
+### Objects (OOP languages)
+- Follow Elegant Objects, SOLID, DDD, YAGNI, DRY; where they disagree, Elegant Objects wins.
+- Fail fast; never fail silently.
+- Compose; never inherit implementation.
+- One primary constructor with assignments only; secondary constructors delegate to it.
+- Every class is final and immutable, with one to four attributes.
+- No -er names, utility classes, static methods, public static constants, getters, or setters.
+- Every public method is declared in an interface first; nothing else is public except constructors.
+- Never pass or return null; convert nulls from external APIs at the boundary.
+- No type introspection, casting, or reflection.
+- Exception: constructs the language or framework requires (`main`, `equals`, JUnit static sources, test classes) — keep them minimal.
 
 Монолит с моками: часть функций настоящая (регистрация, вход, профиль, дружба), часть возвращается из JSON-моков (фото, лайки, лента, статистика).
 Стек: Java 25 (Gradle toolchain), Gradle 9.7.1, Spring Boot 4.1.1, MySQL 8.4; фронт — React 19 + Vite 8 + Apollo Client 4 + MUI 9;

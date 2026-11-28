@@ -8,7 +8,7 @@ if [[ $(jq -r '.hook_event_name' <<<"$input") == PostCompact ]]; then
   exit 0
 fi
 context=""
-for file in "$root"/*/CLAUDE.md; do
+for file in "$root"/*/AGENTS.md; do
   module=$(basename "$(dirname "$file")")
   [[ $scope == *"$module"* ]] || continue
   grep -qx "$module" "$seen" 2>/dev/null && continue
